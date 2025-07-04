@@ -37,4 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## setting up precommit hook
 
-npx husky init
+npm run prepare
