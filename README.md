@@ -38,3 +38,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## setting up precommit hook
 
 npm run prepare
+
+<!-- https://dbdiagram.io/d/study_buddy_erd-686995cdf413ba350871e8f7 -->
