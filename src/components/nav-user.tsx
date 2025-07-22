@@ -28,6 +28,7 @@ import {
 
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -52,6 +53,9 @@ export function NavUser() {
 
   return (
     <SidebarMenu>
+      <SidebarMenuItem>
+        <ThemeToggle />
+      </SidebarMenuItem>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
