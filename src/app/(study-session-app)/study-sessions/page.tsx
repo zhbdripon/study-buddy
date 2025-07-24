@@ -1,9 +1,31 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
+import WebLinkDialogue from "@/components/ui/WebLinkDialogue";
 import { Upload } from "lucide-react";
 
+import { toast } from "sonner";
+import { addURL } from "./action";
+
 const StudySessions = () => {
+  async function handleWebUrlResource(url: string): Promise<void> {
+    toast("Indexing your document, please wait...", {
+      duration: 5000,
+      description:
+        "This may take a few minutes depending on the document size.",
+    });
+    await addURL(url)
+      .then(() => {
+        toast.success("Document indexed successfully!");
+      })
+      .catch((error) => {
+        console.error("Error indexing document:", error);
+        toast.error("Failed to index the document. Please try again.");
+      });
+  }
+
   return (
     <div className="p-6">
       <Card className="border-dashed border-4 p-8">
@@ -21,7 +43,7 @@ const StudySessions = () => {
             </p>
           </div>
           <div className="flex justify-center">
-            <Button className="mx-2">Web Link</Button>
+            <WebLinkDialogue onURLAdd={handleWebUrlResource} />
             <Button className="mx-2">Youtube Link</Button>
             <Button className="mx-2">Documents</Button>
             <Button className="mx-2">Handwriting</Button>
