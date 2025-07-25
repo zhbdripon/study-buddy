@@ -1,29 +1,14 @@
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { Document } from "@langchain/core/documents";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { PineconeStore } from "@langchain/pinecone";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
-import { PineconeStore } from "@langchain/pinecone";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 
-function urlToQualifiedId(url: string) {
-  try {
-    const parsed = new URL(url);
-
-    // Combine hostname and path
-    const host = parsed.hostname.replace(/\./g, "_");
-    const path = parsed.pathname.replace(/[^a-zA-Z0-9]/g, "_");
-
-    // Remove leading/trailing underscores, collapse multiple underscores
-    const qualifiedId = `${host}${path}`
-      .replace(/_+/g, "_") // Collapse multiple underscores
-      .replace(/^_+|_+$/g, "") // Trim leading/trailing underscores
-      .toLowerCase();
-
-    return qualifiedId;
-  } catch (e) {
-    console.error("Invalid URL:", url, e);
-    throw new Error(`Invalid URL: ${url}`);
-  }
-}
+import { urlToQualifiedId } from "@/lib/utils";
 
 export async function indexWebResource(url: string) {
   const embeddings = new OpenAIEmbeddings({
@@ -57,9 +42,32 @@ export async function indexWebResource(url: string) {
     const allSplits = await splitter.splitDocuments(docs);
 
     await vectorStore.addDocuments(allSplits);
+    const summary = await generateURLSummary(allSplits);
 
-    return { namespace };
+    return { namespace, summary };
   } catch (e) {
     console.log(e);
   }
+}
+
+async function generateURLSummary(docs: Document[]) {
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+  });
+
+  // Define prompt
+  const prompt = PromptTemplate.fromTemplate(
+    "Summarize the main themes in these retrieved docs: {context}",
+  );
+
+  // Instantiate
+  const chain = await createStuffDocumentsChain({
+    llm: llm,
+    outputParser: new StringOutputParser(),
+    prompt,
+  });
+
+  // Invoke
+  return await chain.invoke({ context: docs });
 }

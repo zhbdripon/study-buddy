@@ -1,15 +1,35 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
 import WebLinkDialogue from "@/components/ui/WebLinkDialogue";
 import { Upload } from "lucide-react";
 
+import { StudySession } from "@/drizzle/types";
+import { getFormattedDateAndTime } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { addURL } from "./action";
+import { addURL, getStudySessions } from "./action";
 
 const StudySessions = () => {
+  const router = useRouter();
+  const [studySession, setStudySession] = useState<StudySession[]>([]);
+  const [startTransition] = useTransition();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const data = await getStudySessions();
+      setStudySession(data);
+    });
+  }, []);
+
   async function handleWebUrlResource(url: string): Promise<void> {
     toast("Indexing your document, please wait...", {
       duration: 5000,
@@ -17,7 +37,8 @@ const StudySessions = () => {
         "This may take a few minutes depending on the document size.",
     });
     await addURL(url)
-      .then(() => {
+      .then((studySessionId: number) => {
+        router.push(`/study-sessions/${studySessionId}`);
         toast.success("Document indexed successfully!");
       })
       .catch((error) => {
@@ -50,6 +71,23 @@ const StudySessions = () => {
           </div>
         </CardContent>
       </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 ">
+        {studySession.map((session) => (
+          <Card
+            key={session.id}
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={() => router.push(`/study-sessions/${session.id}`)}
+          >
+            <CardHeader>{session.name}</CardHeader>
+            <CardFooter>
+              <blockquote className="mt-6 border-l-2 pl-6 italic text-xs text-muted-foreground">
+                {"created at:" +
+                  getFormattedDateAndTime(new Date(session.createdAt))}
+              </blockquote>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
