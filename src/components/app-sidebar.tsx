@@ -29,19 +29,19 @@ const data = {
       items: [
         {
           title: "Study Sessions",
-          url: "study-sessions",
+          url: "/study-sessions",
         },
         {
           title: "Ask Anything",
-          url: "ask",
+          url: "/ask",
         },
         {
           title: "Todos",
-          url: "todos",
+          url: "/todos",
         },
         {
           title: "Explore",
-          url: "explore",
+          url: "/explore",
         },
       ],
     },

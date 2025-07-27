@@ -58,7 +58,7 @@ async function generateURLSummary(docs: Document[]) {
 
   // Define prompt
   const prompt = PromptTemplate.fromTemplate(
-    "Summarize the main themes in these retrieved docs: {context}",
+    "Summarize the main themes in markdown in these retrieved docs: {context}",
   );
 
   // Instantiate

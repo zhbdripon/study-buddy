@@ -30,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider attribute={["class", `data-theme`]}>
+          {children}
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

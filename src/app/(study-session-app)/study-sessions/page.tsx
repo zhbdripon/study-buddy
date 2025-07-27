@@ -21,7 +21,7 @@ import { addURL, getStudySessions } from "./action";
 const StudySessions = () => {
   const router = useRouter();
   const [studySession, setStudySession] = useState<StudySession[]>([]);
-  const [startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     startTransition(async () => {
@@ -72,6 +72,7 @@ const StudySessions = () => {
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 ">
+        {isPending && <p>Loading...</p>}
         {studySession.map((session) => (
           <Card
             key={session.id}

@@ -1,5 +1,6 @@
-import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { getStudySessionDocumentSummary } from "./action";
 
 const StudySession = async ({ params }: { params: { id: string } }) => {
@@ -9,9 +10,9 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
   );
 
   return (
-    <div className="flex flex-row w-full">
-      <div className="grow-1 border-r border-[var(--border)] p-6 h-svh">
-        <Tabs defaultValue="summary" className="w-[400px]">
+    <div className="flex flex-row w-full h-svh">
+      <div className="flex-1 order-r border-[var(--border)] p-6 h-full">
+        <Tabs defaultValue="summary">
           <TabsList>
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="quiz">Quiz</TabsTrigger>
@@ -20,8 +21,11 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
           </TabsList>
           <TabsContent value="summary">
             {summaries.map((data) => (
-              <div className="w-full" key={data.id}>
-                {data.summary}
+              <div
+                key={data.id}
+                className="prose dark:prose-invert lg:prose-md"
+              >
+                <Markdown remarkPlugins={[remarkGfm]}>{data.summary}</Markdown>
               </div>
             ))}
           </TabsContent>
@@ -34,7 +38,9 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
           </TabsContent>
         </Tabs>
       </div>
-      <div className="w-96">chat</div>
+      <div className="w-96 flex-shrink-0 h-full border-l border-[var(--border)]">
+        chat
+      </div>
     </div>
   );
 };
