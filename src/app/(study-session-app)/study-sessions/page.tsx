@@ -31,7 +31,7 @@ const StudySessions = () => {
   }, []);
 
   async function handleWebUrlResource(url: string): Promise<void> {
-    toast("Indexing your document, please wait...", {
+    toast("Analyzing your document, please wait...", {
       duration: 5000,
       description:
         "This may take a few minutes depending on the document size.",
@@ -39,11 +39,11 @@ const StudySessions = () => {
     await addURL(url)
       .then((studySessionId: number) => {
         router.push(`/study-sessions/${studySessionId}`);
-        toast.success("Document indexed successfully!");
+        toast.success("Document summarized successfully!");
       })
       .catch((error) => {
-        console.error("Error indexing document:", error);
-        toast.error("Failed to index the document. Please try again.");
+        console.error("Error analyzing document:", error);
+        toast.error("Failed to analyzing the document. Please try again.");
       });
   }
 

@@ -10,7 +10,8 @@ import {
   StudySessionInsert,
 } from "@/drizzle/types";
 import { auth } from "@/lib/auth";
-import { indexWebResource } from "@/service/studySession";
+import { documentType } from "@/lib/constants";
+import { generateURLSummary } from "@/service/studySession";
 
 export async function addURL(
   url: string,
@@ -21,11 +22,11 @@ export async function addURL(
   });
   const user = session?.user;
   try {
-    const result = await indexWebResource(url);
-    if (!result || !result.namespace || !result.summary) {
-      throw new Error("Failed to index web resource");
+    const summary = await generateURLSummary(url);
+
+    if (!summary) {
+      throw new Error("Failed to summarize the resource");
     }
-    const { namespace, summary } = result;
 
     if (!studySessionId && user) {
       const newStudySession: StudySessionInsert = {
@@ -44,9 +45,12 @@ export async function addURL(
     if (studySessionId) {
       const newDocument: DocumentsInsert = {
         sessionId: studySessionId,
-        embeddingPath: namespace,
         createdAt: new Date(),
         updatedAt: new Date(),
+        meta: {
+          type: documentType.webUrl,
+          url,
+        },
       };
       const createdNewDocument = await db
         .insert(document)

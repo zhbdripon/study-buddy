@@ -1,0 +1,1 @@
+ALTER TABLE "doc_chat" ADD COLUMN "embedding_path" text;

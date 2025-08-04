@@ -1,0 +1,1 @@
+ALTER TABLE "doc_chat" ALTER COLUMN "embedding_path" SET NOT NULL;

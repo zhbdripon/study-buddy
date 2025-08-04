@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getStudySessionDocumentSummary } from "./action";
+import ChatPanel from "./ChatPanel";
 
 const StudySession = async ({ params }: { params: { id: string } }) => {
   const { id: studySessionId } = await params;
@@ -11,7 +12,7 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
 
   return (
     <div className="flex flex-row w-full h-svh">
-      <div className="flex-1 order-r border-[var(--border)] p-6 h-full">
+      <div className="flex-1 order-r border-[var(--border)] p-6 h-full overflow-y-auto scrollbar-thin">
         <Tabs defaultValue="summary">
           <TabsList>
             <TabsTrigger value="summary">Summary</TabsTrigger>
@@ -38,8 +39,8 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
           </TabsContent>
         </Tabs>
       </div>
-      <div className="w-96 flex-shrink-0 h-full border-l border-[var(--border)]">
-        chat
+      <div className="w-[450px] p-3 flex-shrink-0 flex h-full border-l border-[var(--border)]">
+        <ChatPanel studySessionId={studySessionId} />
       </div>
     </div>
   );

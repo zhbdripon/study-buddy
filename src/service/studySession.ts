@@ -1,5 +1,4 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { Document } from "@langchain/core/documents";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
@@ -42,15 +41,21 @@ export async function indexWebResource(url: string) {
     const allSplits = await splitter.splitDocuments(docs);
 
     await vectorStore.addDocuments(allSplits);
-    const summary = await generateURLSummary(allSplits);
 
-    return { namespace, summary };
+    return { namespace };
   } catch (e) {
     console.log(e);
   }
 }
 
-async function generateURLSummary(docs: Document[]) {
+export async function generateURLSummary(url: string) {
+  const pTagSelector = "article, main, .content, #main, #post";
+  const cheerioLoader = new CheerioWebBaseLoader(url, {
+    selector: pTagSelector,
+  });
+
+  const docs = await cheerioLoader.load();
+
   const llm = new ChatOpenAI({
     model: "gpt-4o-mini",
     temperature: 0,

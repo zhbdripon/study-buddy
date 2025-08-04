@@ -1,0 +1,1 @@
+ALTER TABLE "doc_chat_messages" DROP CONSTRAINT "doc_chat_messages_parent_message_id_doc_chat_messages_id_fk";

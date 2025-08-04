@@ -87,7 +87,10 @@ export const document = pgTable("documents", {
 
 export const docChat = pgTable("doc_chat", {
   id: serial("id").primaryKey(),
+  title: text("title"),
   sessionId: integer("session_id").references(() => studySession.id),
+  embeddingPath: text("embedding_path").notNull(),
+  threadId: text("thread_id").notNull(),
   ...timestampFields,
 });
 
@@ -98,11 +101,17 @@ export const docChatDocument = pgTable("doc_chat_documents", {
   ...timestampFields,
 });
 
+export const chatParticipantEnum = pgEnum("chat_participant", [
+  "user",
+  "assistant",
+]);
+
 export const docChatMessage = pgTable("doc_chat_messages", {
   id: serial("id").primaryKey(),
   chatId: integer("chat_id").references(() => docChat.id),
-  query: text("query"),
-  response: text("response"),
+  role: chatParticipantEnum("role").notNull(),
+  content: text("content").notNull(),
+  parentMessageId: integer("parent_message_id"),
   ...timestampFields,
 });
 
