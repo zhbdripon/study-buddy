@@ -49,7 +49,7 @@ const WebLinkDialogue = ({ onURLAdd }: Props) => {
       >
         Web Link
       </DialogTriggerButton>
-      <DialogContent>
+      <DialogContent onClose={() => setShowModal(false)}>
         <DialogHeader>
           <DialogTitle>Enter Web Link</DialogTitle>
         </DialogHeader>

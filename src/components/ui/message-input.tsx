@@ -141,7 +141,6 @@ export function MessageInput({
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    console.log("Here : ", submitOnEnter, event.key, !event.shiftKey);
     if (submitOnEnter && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
 
@@ -150,18 +149,15 @@ export function MessageInput({
           stop();
           setShowInterruptPrompt(false);
           // event.currentTarget.form?.requestSubmit();
-          console.log("first");
           handleSubmit();
         } else if (
           props.value ||
           (props.allowAttachments && props.files?.length)
         ) {
-          console.log("second");
           setShowInterruptPrompt(true);
           return;
         }
       }
-      console.log("third");
       // event.currentTarget.form?.requestSubmit();
       handleSubmit();
     }
