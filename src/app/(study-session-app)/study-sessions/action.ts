@@ -22,7 +22,7 @@ export async function addURL(
   });
   const user = session?.user;
   try {
-    const summary = await generateURLSummary(url);
+    const { title, summary } = await generateURLSummary(url);
 
     if (!summary) {
       throw new Error("Failed to summarize the resource");
@@ -30,7 +30,7 @@ export async function addURL(
 
     if (!studySessionId && user) {
       const newStudySession: StudySessionInsert = {
-        name: "Untitled session",
+        name: title || "Untitled session",
         userId: user.id,
         createdAt: new Date(),
         updatedAt: new Date(),
