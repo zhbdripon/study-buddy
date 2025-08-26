@@ -79,7 +79,9 @@ export const studySession = pgTable("study_session", {
 
 export const document = pgTable("documents", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => studySession.id),
+  sessionId: integer("session_id").references(() => studySession.id, {
+    onDelete: "cascade",
+  }),
   meta: json("meta"),
   embeddingPath: text("embedding_path"),
   ...timestampFields,
@@ -88,7 +90,9 @@ export const document = pgTable("documents", {
 export const docChat = pgTable("doc_chat", {
   id: serial("id").primaryKey(),
   title: text("title"),
-  sessionId: integer("session_id").references(() => studySession.id),
+  sessionId: integer("session_id").references(() => studySession.id, {
+    onDelete: "cascade",
+  }),
   embeddingPath: text("embedding_path").notNull(),
   threadId: text("thread_id").notNull(),
   ...timestampFields,
@@ -96,8 +100,12 @@ export const docChat = pgTable("doc_chat", {
 
 export const docChatDocument = pgTable("doc_chat_documents", {
   id: serial("id").primaryKey(),
-  chatId: integer("chat_id").references(() => docChat.id),
-  documentId: integer("document_id").references(() => document.id),
+  chatId: integer("chat_id").references(() => docChat.id, {
+    onDelete: "cascade",
+  }),
+  documentId: integer("document_id").references(() => document.id, {
+    onDelete: "cascade",
+  }),
   ...timestampFields,
 });
 
@@ -108,7 +116,9 @@ export const chatParticipantEnum = pgEnum("chat_participant", [
 
 export const docChatMessage = pgTable("doc_chat_messages", {
   id: serial("id").primaryKey(),
-  chatId: integer("chat_id").references(() => docChat.id),
+  chatId: integer("chat_id").references(() => docChat.id, {
+    onDelete: "cascade",
+  }),
   role: chatParticipantEnum("role").notNull(),
   content: text("content").notNull(),
   parentMessageId: integer("parent_message_id"),
@@ -117,14 +127,20 @@ export const docChatMessage = pgTable("doc_chat_messages", {
 
 export const docQuiz = pgTable("doc_quiz", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => studySession.id),
+  sessionId: integer("session_id").references(() => studySession.id, {
+    onDelete: "cascade",
+  }),
   ...timestampFields,
 });
 
 export const docQuizDocument = pgTable("doc_quiz_documents", {
   id: serial("id").primaryKey(),
-  quizId: integer("quiz_id").references(() => docQuiz.id),
-  documentId: integer("document_id").references(() => document.id),
+  quizId: integer("quiz_id").references(() => docQuiz.id, {
+    onDelete: "cascade",
+  }),
+  documentId: integer("document_id").references(() => document.id, {
+    onDelete: "cascade",
+  }),
   ...timestampFields,
 });
 
@@ -132,7 +148,9 @@ export const quizAnswerEnum = pgEnum("quiz_answer", ["a", "b", "c", "d"]);
 
 export const docQuizQuestion = pgTable("doc_quiz_questions", {
   id: serial("id").primaryKey(),
-  quizId: integer("quiz_id").references(() => docQuiz.id),
+  quizId: integer("quiz_id").references(() => docQuiz.id, {
+    onDelete: "cascade",
+  }),
   question: text("question"),
   optionA: text("option_a"),
   optionB: text("option_b"),
@@ -144,28 +162,38 @@ export const docQuizQuestion = pgTable("doc_quiz_questions", {
 
 export const docQuizQuestionResult = pgTable("doc_quiz_question_result", {
   id: serial("id").primaryKey(),
-  questionId: integer("question_id").references(() => docQuizQuestion.id),
+  questionId: integer("question_id").references(() => docQuizQuestion.id, {
+    onDelete: "cascade",
+  }),
   pick: quizAnswerEnum("pick"),
   ...timestampFields,
 });
 
 export const docNote = pgTable("doc_note", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => studySession.id),
+  sessionId: integer("session_id").references(() => studySession.id, {
+    onDelete: "cascade",
+  }),
   noteContent: text("note_content"),
   ...timestampFields,
 });
 
 export const docNoteDocument = pgTable("doc_note_documents", {
   id: serial("id").primaryKey(),
-  noteId: integer("note_id").references(() => docNote.id),
-  documentId: integer("document_id").references(() => document.id),
+  noteId: integer("note_id").references(() => docNote.id, {
+    onDelete: "cascade",
+  }),
+  documentId: integer("document_id").references(() => document.id, {
+    onDelete: "cascade",
+  }),
   ...timestampFields,
 });
 
 export const documentSummary = pgTable("doc_summary", {
   id: serial("id").primaryKey(),
-  documentId: integer("document_id").references(() => document.id),
+  documentId: integer("document_id").references(() => document.id, {
+    onDelete: "cascade",
+  }),
   summary: text("summary"),
   entire_doc_summary: boolean("entire_doc_summary").notNull(),
   page_start: integer("page_start"),
