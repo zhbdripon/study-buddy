@@ -50,7 +50,7 @@ const ChatPanel = ({ studySessionId }: { studySessionId: string }) => {
     );
   }
 
-  return <DocumentChat studySessionId={studySessionId} chat={chat} />;
+  return <DocumentChat studySessionId={studySessionId} />;
 };
 
 export default ChatPanel;

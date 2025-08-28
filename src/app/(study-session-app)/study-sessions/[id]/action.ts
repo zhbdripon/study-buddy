@@ -134,6 +134,10 @@ export async function sendChatMessage(
   });
 
   const chat = await getDocumentChat(studySessionId);
+  const summaries = await getStudySessionDocumentSummary(studySessionId);
+  const summaryData = summaries.reduce((totalSummary, currSummary) => {
+    return (totalSummary += currSummary.summary || "");
+  }, "");
 
   const user = session?.user;
   if (!user) {
@@ -141,7 +145,11 @@ export async function sendChatMessage(
   }
 
   try {
-    const documentChat = new DocumentChat(chat.embeddingPath, user.id);
+    const documentChat = new DocumentChat(
+      chat.embeddingPath,
+      user.id,
+      summaryData ? summaryData : undefined,
+    );
     await documentChat.initializeChat();
     const messages: BaseMessage[] = await documentChat.sendMessage(
       chat.threadId,
@@ -157,7 +165,6 @@ export async function sendChatMessage(
               role: message instanceof HumanMessage ? "user" : "assistant",
               content: message.content,
               chatId: chat.id,
-              parentMessageId: 4,
             }) as DocChatMessageInsert,
         ),
       )

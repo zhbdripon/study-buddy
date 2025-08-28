@@ -27,6 +27,7 @@ export class DocumentChat {
   constructor(
     private embeddingNameSpace: string,
     private userId: string,
+    private summary?: string,
   ) {
     this.llm = new ChatOpenAI({
       model: "gpt-4o-mini",
@@ -55,7 +56,7 @@ export class DocumentChat {
       async ({ query }: { query: string }): Promise<[string, Document[]]> => {
         const retrievedDocs: Document[] = await vectorStore.similaritySearch(
           query,
-          2,
+          3,
         );
         const serialized: string = retrievedDocs
           .map(
@@ -85,7 +86,7 @@ export class DocumentChat {
     // Step 3: Generate a response using the retrieved content.
     const generate = async (state: typeof MessagesAnnotation.State) => {
       // Get generated ToolMessages
-      const recentToolMessages = [];
+      const recentToolMessages: ToolMessage[] = [];
       for (let i = state["messages"].length - 1; i >= 0; i--) {
         const message = state["messages"][i];
         if (message instanceof ToolMessage) {
@@ -123,11 +124,59 @@ export class DocumentChat {
       return { messages: [response] };
     };
 
+    const classifyQuery = async (state: typeof MessagesAnnotation.State) => {
+      const lastUserMsg = state.messages[state.messages.length - 1];
+      const classificationPrompt = [
+        new SystemMessage(
+          "Classify the user query as 'global' if it asks about the overall document (summary, topics, what it's about), otherwise 'local'. Respond with only one word: 'global' or 'local'.",
+        ),
+        lastUserMsg,
+      ];
+      const response = await this.llm.invoke(classificationPrompt);
+      const content = response.content.toString().toLowerCase();
+
+      return content.includes("global")
+        ? { decision: "global" }
+        : { decision: "local" };
+    };
+
+    const useSummary = async (state: typeof MessagesAnnotation.State) => {
+      const lastMessage = state.messages[state.messages.length - 1];
+      const summaryText = this.summary || "No Summary Data";
+      const systemMessage = new SystemMessage(
+        "You are a helpful assistant. Use the provided summary to answer concisely.",
+      );
+      const summaryMessage = new SystemMessage(
+        `Document Summary:\n${summaryText}`,
+      );
+
+      const response = await this.llm.invoke([
+        systemMessage,
+        lastMessage,
+        summaryMessage,
+      ]);
+
+      return { messages: [response] };
+    };
+
+    // Extend MessagesAnnotation.State to include 'decision' property for type safety
+    type StateWithDecision = typeof MessagesAnnotation.State & {
+      decision?: string;
+    };
+
     const graphBuilder = new StateGraph(MessagesAnnotation)
+      .addNode("classifyQuery", classifyQuery)
       .addNode("queryOrRespond", queryOrRespond)
       .addNode("tools", tools)
       .addNode("generate", generate)
-      .addEdge("__start__", "queryOrRespond")
+      .addNode("useSummary", useSummary)
+
+      .addEdge("__start__", "classifyQuery")
+      .addConditionalEdges("classifyQuery", (state: StateWithDecision) => {
+        return state.decision === "local" ? "queryOrRespond" : "useSummary";
+      })
+      .addEdge("useSummary", "__end__")
+
       .addConditionalEdges("queryOrRespond", toolsCondition, {
         __end__: "__end__",
         tools: "tools",
