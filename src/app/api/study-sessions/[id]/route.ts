@@ -16,7 +16,7 @@ export async function DELETE(
   });
 
   if (!session) {
-    return NextResponse.json({ error: "Session not found" }, { status: 400 });
+    return NextResponse.json({ error: "Session not found" }, { status: 401 });
   }
 
   const id = Number(resolvedParams.id);

@@ -1,0 +1,115 @@
+import { shuffleArray } from "@/lib/utils";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { type Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+
+export type MCQ = {
+  question: string;
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  answer: "A" | "B" | "C" | "D";
+};
+
+export class MCQGenerator {
+  private splitterDocs: Document<Record<string, any>>[] = [];
+  private llm: ChatOpenAI;
+
+  constructor(
+    private docSummary: string,
+    private url: string,
+  ) {
+    this.llm = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      temperature: 0,
+    });
+  }
+
+  async initialize() {
+    const pTagSelector = "article, main, .content, #main, #post";
+    const cheerioLoader = new CheerioWebBaseLoader(this.url, {
+      selector: pTagSelector,
+    });
+
+    const docs = await cheerioLoader.load();
+
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+    });
+
+    this.splitterDocs = await splitter.splitDocuments(docs);
+  }
+
+  async generateMcq(numberOfMCQ: number) {
+    const mcqFromSummary = Math.ceil(numberOfMCQ * 0.3);
+    const mcqFromChunk = numberOfMCQ - mcqFromSummary;
+    let mcq: MCQ[] = [];
+
+    const promptForSummary = PromptTemplate.fromTemplate(`
+      You are an assistant that creates multiple-choice questions.
+      Given the following context, generate ${mcqFromSummary} multiple choice questions with 4 options each.
+      return json objects with properties question, A, B, C, D, answer. Return only the json and nothings else so that we can use JSON.parse the content
+      doc_summary: {summary}
+    `);
+
+    const promptForChunk = PromptTemplate.fromTemplate(`
+      You are an assistant that creates multiple-choice questions.
+      Given the following context, generate {numberOfMcq} multiple choice questions with 4 options each.
+      return json object list with each object having properties question, A, B, C, D, answer. Return only the json and nothings else so that we can use JSON.parse the content
+      context: {context}
+    `);
+
+    const res = await this.llm.invoke(
+      await promptForSummary.invoke({ summary: this.docSummary }),
+    );
+
+    mcq = JSON.parse(res.content as string);
+
+    const totalChunks = this.splitterDocs.length;
+    const shuffledChunks = shuffleArray(this.splitterDocs);
+    let maxAttempt = mcqFromChunk;
+
+    if (totalChunks * 2 >= mcqFromChunk) {
+      for (const chunk of shuffledChunks) {
+        maxAttempt -= 1;
+        const res = await this.llm.invoke(
+          await promptForChunk.invoke({
+            numberOfMcq: 2,
+            context: chunk.pageContent,
+          }),
+        );
+        const content = (res.content as string)
+          .replace("```json", "")
+          .replace("```", "");
+        mcq = [...mcq, ...JSON.parse(content)];
+
+        if (mcq.length >= numberOfMCQ || maxAttempt <= 0) break;
+      }
+    } else {
+      const mcqPerChunk = Math.round(mcqFromChunk / totalChunks);
+      while (maxAttempt > 0 && mcq.length < numberOfMCQ) {
+        for (const chunk of shuffledChunks) {
+          maxAttempt -= 1;
+          const res = await this.llm.invoke(
+            await promptForChunk.invoke({
+              numberOfMcq: mcqPerChunk,
+              context: chunk.pageContent,
+            }),
+          );
+
+          const content = (res.content as string)
+            .replace("```json", "")
+            .replace("```", "");
+          mcq = [...mcq, ...JSON.parse(content)];
+
+          if (maxAttempt <= 0 || mcq.length >= numberOfMCQ) break;
+        }
+      }
+    }
+    return shuffleArray(mcq.slice(0, numberOfMCQ));
+  }
+}

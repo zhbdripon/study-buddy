@@ -1,12 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { DocSummary } from "@/drizzle/types";
 import { getStudySessionDocumentSummary } from "./action";
 import ChatPanel from "./ChatPanel";
+import Quiz from "./Quiz";
+import Summary from "./Summary";
 
 const StudySession = async ({ params }: { params: { id: string } }) => {
   const { id: studySessionId } = await params;
-  const summaries = await getStudySessionDocumentSummary(
+  const summaries: DocSummary[] = await getStudySessionDocumentSummary(
     parseInt(studySessionId),
   );
 
@@ -21,16 +22,11 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
             <TabsTrigger value="resources">Resources</TabsTrigger>
           </TabsList>
           <TabsContent value="summary">
-            {summaries.map((data) => (
-              <div
-                key={data.id}
-                className="prose dark:prose-invert lg:prose-md"
-              >
-                <Markdown remarkPlugins={[remarkGfm]}>{data.summary}</Markdown>
-              </div>
-            ))}
+            <Summary summaries={summaries} />
           </TabsContent>
-          <TabsContent value="quiz">Take your quiz here.</TabsContent>
+          <TabsContent value="quiz">
+            <Quiz sessionId={studySessionId} />
+          </TabsContent>
           <TabsContent value="flashcards">
             Review your flashcards here.
           </TabsContent>

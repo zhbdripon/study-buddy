@@ -32,10 +32,7 @@ export async function getStudySessionDocumentSummary(studySessionId: number) {
   if (!user) return [];
 
   const summaries = await db
-    .select({
-      id: documentSummary.id,
-      summary: documentSummary.summary,
-    })
+    .select()
     .from(documentSummary)
     .innerJoin(document, eq(document.id, documentSummary.documentId))
     .innerJoin(studySession, eq(studySession.id, document.sessionId))
@@ -47,7 +44,7 @@ export async function getStudySessionDocumentSummary(studySessionId: number) {
     )
     .execute();
 
-  return summaries;
+  return summaries.map((row) => row.doc_summary);
 }
 
 export async function getDocumentChat(
@@ -133,16 +130,16 @@ export async function sendChatMessage(
     headers: await headers(),
   });
 
+  const user = session?.user;
+  if (!user) {
+    throw Error("User not found");
+  }
+
   const chat = await getDocumentChat(studySessionId);
   const summaries = await getStudySessionDocumentSummary(studySessionId);
   const summaryData = summaries.reduce((totalSummary, currSummary) => {
     return (totalSummary += currSummary.summary || "");
   }, "");
-
-  const user = session?.user;
-  if (!user) {
-    throw Error("User not found");
-  }
 
   try {
     const documentChat = new DocumentChat(
