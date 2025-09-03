@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocSummary } from "@/drizzle/types";
 import { getStudySessionDocumentSummary } from "./action";
 import ChatPanel from "./ChatPanel";
-import Quiz from "./Quiz";
+import QuizContainer from "./Quiz";
 import Summary from "./Summary";
 
 const StudySession = async ({ params }: { params: { id: string } }) => {
@@ -15,7 +15,7 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
     <div className="flex flex-row w-full h-svh">
       <div className="flex-1 order-r border-[var(--border)] p-6 h-full overflow-y-auto scrollbar-thin">
         <Tabs defaultValue="summary">
-          <TabsList>
+          <TabsList className="mb-8">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="quiz">Quiz</TabsTrigger>
             <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
@@ -25,7 +25,7 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
             <Summary summaries={summaries} />
           </TabsContent>
           <TabsContent value="quiz">
-            <Quiz sessionId={studySessionId} />
+            <QuizContainer sessionId={studySessionId} />
           </TabsContent>
           <TabsContent value="flashcards">
             Review your flashcards here.
