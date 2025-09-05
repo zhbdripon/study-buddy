@@ -1,0 +1,1 @@
+ALTER TABLE "doc_quiz_performance" RENAME COLUMN "pick" TO "chosen_option";

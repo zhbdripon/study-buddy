@@ -11,10 +11,11 @@ import {
   docQuiz,
   docQuizDocument,
   docQuizQuestion,
-  docQuizQuestionResult,
+  docQuizPerformance,
   docNote,
   docNoteDocument,
   documentSummary,
+  quizAnswerEnum,
 } from "@/drizzle/schema";
 
 type ReadonlyId<T> = T extends { id: infer U }
@@ -63,17 +64,18 @@ export type DocQuizDocumentInsert = Omit<
   "id"
 >;
 
+export type DocQuizOption = (typeof quizAnswerEnum.enumValues)[number];
 export type DocQuizQuestion = ReadonlyId<typeof docQuizQuestion.$inferSelect>;
 export type DocQuizQuestionInsert = Omit<
   typeof docQuizQuestion.$inferInsert,
   "id"
 >;
 
-export type DocQuizQuestionResult = ReadonlyId<
-  typeof docQuizQuestionResult.$inferSelect
+export type docQuizPerformance = ReadonlyId<
+  typeof docQuizPerformance.$inferSelect
 >;
-export type DocQuizQuestionResultInsert = Omit<
-  typeof docQuizQuestionResult.$inferInsert,
+export type DocQuizPerformanceInsert = Omit<
+  typeof docQuizPerformance.$inferInsert,
   "id"
 >;
 

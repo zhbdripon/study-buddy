@@ -1,0 +1,1 @@
+ALTER TABLE "doc_quiz_performance" ADD CONSTRAINT "doc_quiz_performance_question_id_unique" UNIQUE("question_id");

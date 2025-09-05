@@ -1,12 +1,21 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { DocSummary } from "@/drizzle/types";
 import { getStudySessionDocumentSummary } from "./action";
 import ChatPanel from "./ChatPanel";
 import QuizContainer from "./Quiz";
 import Summary from "./Summary";
+import TabButton from "./TabButton";
 
-const StudySession = async ({ params }: { params: { id: string } }) => {
+const StudySession = async ({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { tab: string };
+}) => {
   const { id: studySessionId } = await params;
+  const { tab } = await searchParams;
+
   const summaries: DocSummary[] = await getStudySessionDocumentSummary(
     parseInt(studySessionId),
   );
@@ -14,12 +23,12 @@ const StudySession = async ({ params }: { params: { id: string } }) => {
   return (
     <div className="flex flex-row w-full h-svh">
       <div className="flex-1 order-r border-[var(--border)] p-6 h-full overflow-y-auto scrollbar-thin">
-        <Tabs defaultValue="summary">
+        <Tabs defaultValue={tab || "summary"} className="w-full">
           <TabsList className="mb-8">
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="quiz">Quiz</TabsTrigger>
-            <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabButton value="summary" label="Summary" />
+            <TabButton value="quiz" label="Quiz" />
+            <TabButton value="flashcards" label="Flashcards" />
+            <TabButton value="resources" label="Resources" />
           </TabsList>
           <TabsContent value="summary">
             <Summary summaries={summaries} />

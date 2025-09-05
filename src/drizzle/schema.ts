@@ -130,6 +130,9 @@ export const docQuiz = pgTable("doc_quiz", {
   sessionId: integer("session_id").references(() => studySession.id, {
     onDelete: "cascade",
   }),
+  isCompleted: boolean("is_completed")
+    .$defaultFn(() => false)
+    .notNull(),
   ...timestampFields,
 });
 
@@ -148,24 +151,28 @@ export const quizAnswerEnum = pgEnum("quiz_answer", ["a", "b", "c", "d"]);
 
 export const docQuizQuestion = pgTable("doc_quiz_questions", {
   id: serial("id").primaryKey(),
-  quizId: integer("quiz_id").references(() => docQuiz.id, {
-    onDelete: "cascade",
-  }),
-  question: text("question"),
-  optionA: text("option_a"),
-  optionB: text("option_b"),
-  optionC: text("option_c"),
-  optionD: text("option_d"),
-  correctAnswer: quizAnswerEnum("correct_answer"),
+  quizId: integer("quiz_id")
+    .references(() => docQuiz.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
+  question: text("question").notNull(),
+  a: text().notNull(),
+  b: text().notNull(),
+  c: text().notNull(),
+  d: text().notNull(),
+  answer: quizAnswerEnum().notNull(),
   ...timestampFields,
 });
 
-export const docQuizQuestionResult = pgTable("doc_quiz_question_result", {
+export const docQuizPerformance = pgTable("doc_quiz_performance", {
   id: serial("id").primaryKey(),
-  questionId: integer("question_id").references(() => docQuizQuestion.id, {
-    onDelete: "cascade",
-  }),
-  pick: quizAnswerEnum("pick"),
+  questionId: integer("question_id")
+    .references(() => docQuizQuestion.id, {
+      onDelete: "cascade",
+    })
+    .unique(),
+  chosenOption: quizAnswerEnum("chosen_option"),
   ...timestampFields,
 });
 

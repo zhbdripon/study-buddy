@@ -4,15 +4,12 @@ import { type Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { DocQuizQuestion } from "@/drizzle/types";
 
-export type MCQ = {
-  question: string;
-  A: string;
-  B: string;
-  C: string;
-  D: string;
-  answer: "A" | "B" | "C" | "D";
-};
+export type QuizQuestionFromAI = Omit<
+  DocQuizQuestion,
+  "id" | "createdAt" | "updatedAt" | "quizId"
+>;
 
 export class MCQGenerator {
   private splitterDocs: Document<Record<string, any>>[] = [];
@@ -47,19 +44,19 @@ export class MCQGenerator {
   async generateMcq(numberOfMCQ: number) {
     const mcqFromSummary = Math.ceil(numberOfMCQ * 0.3);
     const mcqFromChunk = numberOfMCQ - mcqFromSummary;
-    let mcq: MCQ[] = [];
+    let mcq: DocQuizQuestion[] = [];
 
     const promptForSummary = PromptTemplate.fromTemplate(`
       You are an assistant that creates multiple-choice questions.
       Given the following context, generate ${mcqFromSummary} multiple choice questions with 4 options each.
-      return json objects with properties question, A, B, C, D, answer. Return only the json and nothings else so that we can use JSON.parse the content
+      return json objects with properties question, a, b, c, d, answer. Return only the json and nothings else so that we can use JSON.parse the content
       doc_summary: {summary}
     `);
 
     const promptForChunk = PromptTemplate.fromTemplate(`
       You are an assistant that creates multiple-choice questions.
       Given the following context, generate {numberOfMcq} multiple choice questions with 4 options each.
-      return json object list with each object having properties question, A, B, C, D, answer. Return only the json and nothings else so that we can use JSON.parse the content
+      return json object list with each object having properties question, a, b, c, d, answer. Return only the json and nothings else so that we can use JSON.parse the content
       context: {context}
     `);
 

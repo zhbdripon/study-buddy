@@ -1,0 +1,1 @@
+ALTER TABLE "doc_quiz_documents" ADD COLUMN "is_completed" boolean NOT NULL;
