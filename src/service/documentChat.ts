@@ -142,7 +142,7 @@ export class DocumentChat {
 
     const useSummary = async (state: typeof MessagesAnnotation.State) => {
       const lastMessage = state.messages[state.messages.length - 1];
-      const summaryText = this.summary || "No Summary Data";
+      const summaryText = this.summary ?? "No Summary Data";
       const systemMessage = new SystemMessage(
         "You are a helpful assistant. Use the provided summary to answer concisely.",
       );

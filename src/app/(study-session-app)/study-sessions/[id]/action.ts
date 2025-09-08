@@ -138,7 +138,7 @@ export async function sendChatMessage(
   const chat = await getDocumentChat(studySessionId);
   const summaries = await getStudySessionDocumentSummary(studySessionId);
   const summaryData = summaries.reduce((totalSummary, currSummary) => {
-    return (totalSummary += currSummary.summary || "");
+    return (totalSummary += currSummary.summary ?? "");
   }, "");
 
   try {
