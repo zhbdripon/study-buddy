@@ -1,0 +1,1 @@
+ALTER TABLE "doc_quiz" ALTER COLUMN "session_id" SET NOT NULL;

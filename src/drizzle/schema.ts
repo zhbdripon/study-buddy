@@ -127,9 +127,11 @@ export const docChatMessage = pgTable("doc_chat_messages", {
 
 export const docQuiz = pgTable("doc_quiz", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => studySession.id, {
-    onDelete: "cascade",
-  }),
+  sessionId: integer("session_id")
+    .references(() => studySession.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
   isCompleted: boolean("is_completed")
     .$defaultFn(() => false)
     .notNull(),
