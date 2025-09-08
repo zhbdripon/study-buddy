@@ -7,10 +7,14 @@ import { type Message } from "@/components/ui/chat-message";
 import { Chat } from "@/components/ui/chat";
 
 import { DocChatMessage } from "@/drizzle/types";
-import { getChatMessages, sendChatMessage } from "./action";
+import { getChatMessages, sendChatMessage } from "../action";
 import { toast } from "sonner";
 
-const DocumentChat = ({ studySessionId }: { studySessionId: string }) => {
+export const DocumentChat = ({
+  studySessionId,
+}: {
+  studySessionId: string;
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInputValue, setChatInputValue] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -85,5 +89,3 @@ const DocumentChat = ({ studySessionId }: { studySessionId: string }) => {
     />
   );
 };
-
-export default DocumentChat;

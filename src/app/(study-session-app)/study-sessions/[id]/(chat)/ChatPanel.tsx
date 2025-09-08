@@ -5,8 +5,8 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { DocChat } from "@/drizzle/types";
 import { toast } from "sonner";
-import { getDocumentChat, initializeDocumentChat } from "./action";
-import DocumentChat from "./DocumentChat";
+import { getDocumentChat, initializeDocumentChat } from "../action";
+import { DocumentChat } from "./DocumentChat";
 
 const ChatPanel = ({ studySessionId }: { studySessionId: string }) => {
   const [chat, setChat] = useState<DocChat | null>(null);

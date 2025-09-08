@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { DocSummary } from "@/drizzle/types";
 import { getStudySessionDocumentSummary } from "./action";
-import ChatPanel from "./ChatPanel";
+import ChatPanel from "./(chat)";
 import QuizContainer from "./(quiz)";
 import Summary from "./Summary";
 import TabButton from "./TabButton";
