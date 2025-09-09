@@ -16,6 +16,8 @@ import {
   docNoteDocument,
   documentSummary,
   quizAnswerEnum,
+  docFlashCard,
+  docFlashCardQuestion,
 } from "@/drizzle/schema";
 
 type ReadonlyId<T> = T extends { id: infer U }
@@ -90,3 +92,14 @@ export type DocNoteDocumentInsert = Omit<
 
 export type DocSummary = ReadonlyId<typeof documentSummary.$inferSelect>;
 export type DocSummaryInsert = Omit<typeof documentSummary.$inferInsert, "id">;
+
+export type DocFlashCard = ReadonlyId<typeof docFlashCard.$inferSelect>;
+export type DocFlashCardInsert = Omit<typeof docFlashCard.$inferInsert, "id">;
+
+export type DocFlashCardQuestion = ReadonlyId<
+  typeof docFlashCardQuestion.$inferSelect
+>;
+export type DocFlashCardQuestionInsert = Omit<
+  typeof docFlashCardQuestion.$inferInsert,
+  "id"
+>;

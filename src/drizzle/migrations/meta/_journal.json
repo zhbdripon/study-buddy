@@ -120,6 +120,20 @@
       "when": 1757333717835,
       "tag": "0016_faithful_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1757416262194,
+      "tag": "0017_rapid_triton",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757419322760,
+      "tag": "0018_heavy_maelstrom",
+      "breakpoints": true
     }
   ]
 }

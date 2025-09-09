@@ -178,6 +178,29 @@ export const docQuizPerformance = pgTable("doc_quiz_performance", {
   ...timestampFields,
 });
 
+export const docFlashCard = pgTable("doc_flashcards", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id")
+    .references(() => studySession.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
+  ...timestampFields,
+});
+
+export const docFlashCardQuestion = pgTable("doc_flashcard_questions", {
+  id: serial("id").primaryKey(),
+  flashCardId: integer("flash_card_id")
+    .references(() => docFlashCard.id, {
+      onDelete: "cascade",
+    })
+    .notNull(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  isAnsweredCorrect: boolean("is_answer_correct"),
+  ...timestampFields,
+});
+
 export const docNote = pgTable("doc_note", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").references(() => studySession.id, {

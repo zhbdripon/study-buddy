@@ -1,0 +1,1 @@
+ALTER TABLE "doc_flashcard_questions" ADD COLUMN "is_answer_correct" boolean;
