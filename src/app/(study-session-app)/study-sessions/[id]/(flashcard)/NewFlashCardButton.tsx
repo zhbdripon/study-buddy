@@ -3,16 +3,17 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export const NewQuizButton = ({ sessionId }: { sessionId: string }) => {
+export const NewFlashCardButton = ({ sessionId }: { sessionId: string }) => {
   const router = useRouter();
-
   return (
     <Button
       onClick={() => {
-        router.push(`/study-sessions/${sessionId}?tab=quiz&page=quizTaker`);
+        router.push(
+          `/study-sessions/${sessionId}?tab=flashcards&page=flashCardView`,
+        );
       }}
     >
-      Take a new quiz
+      Answer some flashcards
     </Button>
   );
 };

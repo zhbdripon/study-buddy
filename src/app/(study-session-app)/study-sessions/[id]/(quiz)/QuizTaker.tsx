@@ -21,7 +21,7 @@ export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
     null,
   );
   const [isPending, startTransition] = useTransition();
-  const quizIdFromParams = searchParams.get("quizId");
+  const quizIdFromParams = searchParams.get("itemId");
 
   const fetchQuestions = useCallback(async () => {
     const res = await fetchWithAuth(
@@ -124,8 +124,12 @@ export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
     setQuestionIndex((prev) => prev + 1);
   };
 
-  if (isPending) {
+  if (isPending && !quizIdFromParams) {
     return <div>Generating quiz...</div>;
+  }
+
+  if (isPending && quizIdFromParams && questions.length === 0) {
+    return <div>Loading quiz...</div>;
   }
 
   if (!questions || questions.length === 0) {

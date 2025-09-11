@@ -3,6 +3,7 @@ import { DocSummary } from "@/drizzle/types";
 import { getStudySessionDocumentSummary } from "./action";
 import ChatPanel from "./(chat)";
 import QuizContainer from "./(quiz)";
+import FlashCardContainer from "./(flashcard)";
 import Summary from "./Summary";
 import TabButton from "./TabButton";
 
@@ -11,7 +12,7 @@ const StudySession = async ({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { tab: string; quizPage?: string; quizId?: string };
+  searchParams: { tab: string; page?: string; itemId?: string };
 }) => {
   const { id: studySessionId } = await params;
   const { tab } = await searchParams;
@@ -40,7 +41,10 @@ const StudySession = async ({
             />
           </TabsContent>
           <TabsContent value="flashcards">
-            Review your flashcards here.
+            <FlashCardContainer
+              sessionId={studySessionId}
+              searchParams={searchParams}
+            />
           </TabsContent>
           <TabsContent value="resources">
             Access your resources here.

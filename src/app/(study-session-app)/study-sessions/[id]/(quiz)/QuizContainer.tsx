@@ -4,17 +4,16 @@ import { NewQuizButton } from "./NewQuizButton";
 import { QuizResults } from "./QuizResult";
 import { RecentQuiz } from "./RecentQuiz";
 
-const QuizContainer = ({
+const QuizContainer = async ({
   sessionId,
   searchParams,
 }: {
   sessionId: string;
-  searchParams: { quizPage?: string; quizId?: string };
+  searchParams: { page?: string; itemId?: string };
 }) => {
-  const quizPage = searchParams?.quizPage;
-  const quizId = searchParams?.quizId;
-
-  console.log("QuizContainer render", { quizPage, quizId });
+  const params = await searchParams;
+  const quizPage = params?.page;
+  const quizId = params?.itemId;
 
   if (quizPage === "quizTaker") {
     return <QuizTaker sessionId={sessionId} />;

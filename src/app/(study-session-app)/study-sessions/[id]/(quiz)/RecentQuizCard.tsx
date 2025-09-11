@@ -18,11 +18,11 @@ const RecentQuizCard = ({
       onClick={() => {
         if (quiz.isCompleted) {
           router.push(
-            `/study-sessions/${sessionId}?tab=quiz&quizPage=results&quizId=${quiz.id}`,
+            `/study-sessions/${sessionId}?tab=quiz&page=results&itemId=${quiz.id}`,
           );
         } else {
           router.push(
-            `/study-sessions/${sessionId}?tab=quiz&quizPage=quizTaker&quizId=${quiz.id}`,
+            `/study-sessions/${sessionId}?tab=quiz&page=quizTaker&itemId=${quiz.id}`,
           );
         }
       }}
