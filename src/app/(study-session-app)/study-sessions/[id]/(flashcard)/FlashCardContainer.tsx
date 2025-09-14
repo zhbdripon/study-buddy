@@ -1,22 +1,29 @@
-import React from "react";
 import { FileQuestionMark } from "lucide-react";
+import { FlashCardView } from "./FlashCardView";
 import { NewFlashCardButton } from "./NewFlashCardButton";
 import { RecentFlashCards } from "./RecentFlashCards";
-import { FlashCardView } from "./FlashCardView";
+import { getFlashCardData } from "./action";
 
 const FlashCardContainer = async ({
   sessionId,
   searchParams,
 }: {
   sessionId: string;
-  searchParams: { page?: string; itemId?: string };
+  searchParams: { page?: string; itemId?: string; tab?: string };
 }) => {
   const params = await searchParams;
   const page = params?.page;
-  const itemId = params?.itemId;
-  console.log("FlashCardContainer params:", page, page === "flashCardsView");
-  if (page === "flashCardView") {
-    return <FlashCardView sessionId={sessionId} flashCardId={itemId} />;
+  const flashcardId = params?.itemId;
+  const tab = params?.tab;
+
+  if (tab === "flashcards" && page === "flashCardView" && flashcardId) {
+    const flashcardData = await getFlashCardData(
+      parseInt(sessionId),
+      parseInt(flashcardId),
+    );
+    return (
+      <FlashCardView sessionId={sessionId} flashcardData={flashcardData} />
+    );
   }
 
   return (

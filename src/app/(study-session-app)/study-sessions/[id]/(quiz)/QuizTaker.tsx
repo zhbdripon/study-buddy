@@ -2,120 +2,61 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DocQuizOption, DocQuizQuestion } from "@/drizzle/types";
-import { fetchWithAuth } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { Spinner } from "@/components/ui/shadcn-io/spinner";
+import { DocQuizOption } from "@/drizzle/types";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { QuizData, markQuizAsCompleted, saveQuizAnswer } from "./action";
 
-type QuizQuestionWithAnswer = DocQuizQuestion & {
-  chosenOption?: DocQuizOption;
-};
-
-export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
+export const QuizTaker = ({
+  sessionId,
+  quizData,
+}: {
+  sessionId: string;
+  quizData: QuizData;
+}) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [questions, setQuestions] = useState<QuizQuestionWithAnswer[]>([]);
+  const { questions, id: quizId } = quizData;
   const [questionsIndex, setQuestionIndex] = useState(0);
   const [choices, setChoices] = useState({});
+  const [savingAnswer, setSavingAnswer] = useState(false);
   const [currentChoice, setCurrentChoice] = useState<DocQuizOption | null>(
     null,
   );
-  const [isPending, startTransition] = useTransition();
-  const quizIdFromParams = searchParams.get("itemId");
 
-  const fetchQuestions = useCallback(async () => {
-    const res = await fetchWithAuth(
-      `/api/study-sessions/${sessionId}/quiz/${quizIdFromParams}/question`,
-    );
-    if (res && res.ok) {
-      const data = await res.json();
-      setQuestions(data as QuizQuestionWithAnswer[]);
-    }
-  }, [sessionId, quizIdFromParams]);
-
-  const createNewQuiz = useCallback(async () => {
-    const res = await fetchWithAuth(`/api/study-sessions/${sessionId}/quiz`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (res && res.ok) {
-      const data = await res.json();
-      setQuestions(data as QuizQuestionWithAnswer[]);
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    startTransition(async () => {
-      if (questions.length === 0 && quizIdFromParams) {
-        await fetchQuestions();
-      } else if (questions.length === 0) {
-        await createNewQuiz();
-      }
-    });
-  }, [quizIdFromParams, sessionId, fetchQuestions, createNewQuiz]); // Added fetchQuestions and createNewQuiz to dependencies to avoid warnings
-
-  const saveAnswer = async () => {
-    if (!currentChoice) return;
-    const question = questions[questionsIndex];
-    const answer = currentChoice;
-
-    const res = await fetchWithAuth(
-      `/api/study-sessions/${sessionId}/quiz/${question.quizId}/question/${question.id}/answer`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ answer }),
-      },
-    );
-
-    if (res && res.ok) {
-      console.log("Answer saved successfully");
-    } else {
-      console.error("Failed to save answer");
-    }
-  };
-
-  const saveQuizAsCompleted = async () => {
-    const question = questions[questionsIndex];
-    return await fetchWithAuth(
-      `/api/study-sessions/${sessionId}/quiz/${question.quizId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ isCompleted: true }),
-      },
-    );
+  const handleQuizComplete = async (quizId: number) => {
+    await markQuizAsCompleted(parseInt(sessionId), quizId)
+      .then(() => {
+        setQuestionIndex(0);
+        setChoices({});
+        setCurrentChoice(null);
+        router.replace(
+          `/study-sessions/${sessionId}?tab=quiz&page=results&itemId=${quizId}`,
+        );
+      })
+      .catch((error) => {
+        console.error("Failed to mark quiz as completed", error);
+      });
   };
 
   const handleQuizNext = async () => {
     const question = questions[questionsIndex];
+
     if (currentChoice) {
-      await saveAnswer();
+      setSavingAnswer(true);
+      await saveQuizAnswer(parseInt(sessionId), question.id, currentChoice)
+        .catch((error) => {
+          console.error("Failed to save quiz answer", error);
+          toast.error("Failed to save quiz answer");
+        })
+        .finally(() => {
+          setSavingAnswer(false);
+        });
     }
 
     if (questionsIndex === questions.length - 1) {
-      saveQuizAsCompleted()
-        .then((res) => {
-          if (res && res.ok) {
-            setQuestionIndex(0);
-            setChoices({});
-            setCurrentChoice(null);
-            router.push(
-              `/study-sessions/${sessionId}?tab=quiz&quizPage=results&quizId=${question.quizId}`,
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to mark quiz as completed", error);
-        });
-
+      await handleQuizComplete(quizId);
       return;
     }
 
@@ -124,12 +65,22 @@ export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
     setQuestionIndex((prev) => prev + 1);
   };
 
-  if (isPending && !quizIdFromParams) {
-    return <div>Generating quiz...</div>;
-  }
-
-  if (isPending && quizIdFromParams && questions.length === 0) {
-    return <div>Loading quiz...</div>;
+  if (quizData && quizData.isCompleted) {
+    return (
+      <div className="flex flex-col items-center gap-y-2">
+        <h2>Quiz Completed</h2>
+        <p>Your results have been saved.</p>
+        <Button
+          onClick={() =>
+            router.replace(
+              `/study-sessions/${sessionId}?tab=quiz&page=results&itemId=${quizId}`,
+            )
+          }
+        >
+          View Results
+        </Button>
+      </div>
+    );
   }
 
   if (!questions || questions.length === 0) {
@@ -137,15 +88,32 @@ export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
   }
 
   if (questions[questionsIndex].chosenOption) {
-    setQuestionIndex((prev) => prev + 1);
+    let allQuestionsAnswered = true;
+    for (let i = questionsIndex + 1; i < questions.length; i++) {
+      if (!questions[i].chosenOption) {
+        setQuestionIndex(i);
+        allQuestionsAnswered = false;
+        break;
+      }
+    }
+
+    if (allQuestionsAnswered) {
+      handleQuizComplete(quizId);
+      return null;
+    }
   }
 
   return (
     <div>
-      <p className="mb-4">
-        {questionsIndex + 1 + ". "}
-        {questions[questionsIndex].question}
-      </p>
+      <div className="flex flex-row justify-between items-start mb-4">
+        <p className="w-[90%]">
+          {questionsIndex + 1 + ". "}
+          {questions[questionsIndex].question}
+        </p>
+        <p>
+          {questionsIndex + 1}/{questions.length}
+        </p>
+      </div>
       {["a", "b", "c", "d"].map((option) => (
         <Card
           onClick={() => {
@@ -166,7 +134,15 @@ export const QuizTaker = ({ sessionId }: { sessionId: string }) => {
       <div className="flex flex-row justify-end w-full">
         {questionsIndex <= questions.length - 1 && (
           <Button disabled={!currentChoice} onClick={handleQuizNext}>
-            {questionsIndex === questions.length - 1 ? "Finish" : "Next"}
+            {savingAnswer ? (
+              <>
+                Saving <Spinner />
+              </>
+            ) : questionsIndex === questions.length - 1 ? (
+              "Finish"
+            ) : (
+              "Next"
+            )}
           </Button>
         )}
       </div>

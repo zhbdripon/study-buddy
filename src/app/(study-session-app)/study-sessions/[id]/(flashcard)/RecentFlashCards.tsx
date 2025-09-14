@@ -10,9 +10,9 @@ export const RecentFlashCards = async ({
   const recentFlashCards = await getRecentFlashCards(parseInt(sessionId));
   return (
     <div>
-      <h3 className="scroll-m-20 pb-2 text-2xl font-semibold tracking-tight first:mt-0">
+      <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mx-2">
         Recent FlashCards
-      </h3>
+      </h4>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {recentFlashCards.map((flashCard) => (
           <RecentFlashCard key={flashCard.id} flashCard={flashCard} />

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { z } from "zod";
 
+import { addURL } from "@/app/(study-session-app)/study-sessions/action";
 import {
   Dialog,
   DialogContent,
@@ -9,24 +10,40 @@ import {
   DialogTitle,
   DialogTriggerButton,
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "./button";
 import { Input } from "./input";
 
-interface Props {
-  onURLAdd: (url: string) => void;
-}
-
 const urlSchema = z.string().url();
 
-const WebLinkDialogue = ({ onURLAdd }: Props) => {
+const WebLinkDialogue = () => {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
     setError(null);
   };
+
+  async function handleWebUrlResource(url: string): Promise<void> {
+    toast("Analyzing your document, please wait...", {
+      duration: 5000,
+      description:
+        "This may take a few minutes depending on the document size.",
+    });
+    addURL(url)
+      .then((studySessionId: number) => {
+        toast.success("Document summarized successfully!");
+        router.push(`/study-sessions/${studySessionId}?tab=summary`);
+      })
+      .catch((error) => {
+        console.error("Error analyzing document:", error);
+        toast.error("Failed to analyzing the document. Please try again.");
+      });
+  }
 
   const handleAdd = () => {
     const result = urlSchema.safeParse(url);
@@ -34,7 +51,7 @@ const WebLinkDialogue = ({ onURLAdd }: Props) => {
       setError("Please enter a valid URL.");
       return;
     }
-    onURLAdd(url);
+    handleWebUrlResource(url);
     setUrl("");
     setError(null);
     setShowModal(false);

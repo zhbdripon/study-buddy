@@ -1,27 +1,33 @@
 import { BookCheck } from "lucide-react";
-import { QuizTaker } from "./QuizTaker";
 import { NewQuizButton } from "./NewQuizButton";
 import { QuizResults } from "./QuizResult";
+import { QuizTaker } from "./QuizTaker";
 import { RecentQuiz } from "./RecentQuiz";
+import { getQuizData, QuizData } from "./action";
 
 const QuizContainer = async ({
   sessionId,
   searchParams,
 }: {
   sessionId: string;
-  searchParams: { page?: string; itemId?: string };
+  searchParams: { page?: string; itemId?: string; tab?: string };
 }) => {
   const params = await searchParams;
   const quizPage = params?.page;
   const quizId = params?.itemId;
+  const tab = params?.tab;
+  let quizData: QuizData | undefined = undefined;
 
-  if (quizPage === "quizTaker") {
-    return <QuizTaker sessionId={sessionId} />;
-  }
+  if (quizId && tab === "quiz") {
+    quizData = await getQuizData(parseInt(sessionId), parseInt(quizId));
 
-  if (quizPage === "results" && quizId) {
-    console.log("Rendering QuizResults with quizId:", searchParams);
-    return <QuizResults quizId={quizId} />;
+    if (quizPage === "quizTaker" && quizData) {
+      return <QuizTaker sessionId={sessionId} quizData={quizData} />;
+    }
+
+    if (quizPage === "results" && quizData) {
+      return <QuizResults quizData={quizData} />;
+    }
   }
 
   return (

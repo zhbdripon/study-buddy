@@ -1,9 +1,9 @@
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { DocSummary } from "@/drizzle/types";
-import { getStudySessionDocumentSummary } from "./action";
 import ChatPanel from "./(chat)";
-import QuizContainer from "./(quiz)";
 import FlashCardContainer from "./(flashcard)";
+import QuizContainer from "./(quiz)";
+import { getStudySessionDocumentSummary } from "./action";
 import Summary from "./Summary";
 import TabButton from "./TabButton";
 
@@ -24,7 +24,7 @@ const StudySession = async ({
   return (
     <div className="flex flex-row w-full h-svh">
       <div className="flex-1 order-r border-[var(--border)] p-6 h-full overflow-y-auto scrollbar-thin">
-        <Tabs defaultValue={tab || "summary"} className="w-full">
+        <Tabs value={tab || "summary"} className="w-full">
           <TabsList className="mb-8">
             <TabButton value="summary" label="Summary" />
             <TabButton value="quiz" label="Quiz" />

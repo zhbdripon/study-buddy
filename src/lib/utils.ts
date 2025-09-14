@@ -46,7 +46,13 @@ export async function fetchWithAuth(
   let attempt = 0;
 
   while (attempt <= maxRetries) {
-    const res = await fetch(input, init);
+    const res = await fetch(input, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
 
     if (res.ok) {
       return res;

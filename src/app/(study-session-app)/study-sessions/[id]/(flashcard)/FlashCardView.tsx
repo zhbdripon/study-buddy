@@ -1,81 +1,27 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DocFlashCardQuestion } from "@/drizzle/types";
-import { fetchWithAuth } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { isNumber } from "remeda";
+import { useState } from "react";
+import { FlashCardData } from "./action";
 
 type ResultInstance = Record<string, { answer: string; isCorrect: boolean }>;
 
 export const FlashCardView = ({
   sessionId,
-  flashCardId,
+  flashcardData,
 }: {
   sessionId: string;
-  flashCardId?: string;
+  flashcardData: FlashCardData;
 }) => {
-  const [flashCards, setFlashCards] = useState<DocFlashCardQuestion[]>([]);
-  const [currentFlashCardId, setCurrentFlashCardId] = useState<number | null>(
-    null,
-  );
+  const flashCards = flashcardData.questions;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ResultInstance>({});
   const [slideDirection, setSlideDirection] = useState<"left" | "right">(
     "right",
   );
-
-  const fetchFlashCards = useCallback(
-    async (flashCardId) => {
-      const res = await fetchWithAuth(
-        `/api/study-sessions/${sessionId}/flashcard/${flashCardId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      if (res && res.ok) {
-        const data = await res.json();
-        setCurrentFlashCardId(parseInt(flashCardId));
-        setFlashCards(data as DocFlashCardQuestion[]);
-      }
-    },
-    [flashCardId],
-  );
-
-  const createNewFlashCard = useCallback(async () => {
-    const res = await fetchWithAuth(
-      `/api/study-sessions/${sessionId}/flashcard`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (res && res.ok) {
-      const data = await res.json();
-      setFlashCards(data as DocFlashCardQuestion[]);
-      setCurrentFlashCardId(data[0]?.flashCardId);
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    startTransition(async () => {
-      if (flashCards.length === 0 && flashCardId) {
-        await fetchFlashCards(flashCardId);
-      } else if (flashCards.length === 0) {
-        await createNewFlashCard();
-      }
-    });
-  }, [flashCardId, sessionId, fetchFlashCards, createNewFlashCard]);
 
   if (currentIndex >= flashCards.length && flashCards.length > 0) {
     return (
@@ -86,20 +32,11 @@ export const FlashCardView = ({
           setCurrentIndex(0);
           setResult({});
         }}
-        onCreateNew={createNewFlashCard}
       />
     );
   }
 
   const flashCard = flashCards[currentIndex];
-
-  if (isPending && !flashCard && !flashCardId) {
-    return <div>Generating...</div>;
-  }
-
-  if (isPending || !flashCard) {
-    return <div>Loading...</div>;
-  }
 
   const commonClasses =
     "bg-sidebar absolute w-full h-full flex items-center justify-center rounded-2xl shadow-xl backface-hidden";
@@ -119,16 +56,14 @@ export const FlashCardView = ({
 
   return (
     <div className="w-full h-96 perspective cursor-pointer">
-      {isNumber(currentFlashCardId) && (
-        <div className="flex justify-between mb-2 px-4">
-          <p className="text-lg font-semibold text-center">
-            Flashcard {currentFlashCardId + 1}
-          </p>
-          <p>
-            {currentIndex + 1} / {flashCards.length}
-          </p>
-        </div>
-      )}
+      <div className="flex justify-between mb-2 px-4">
+        <p className="text-lg font-semibold text-center">
+          Flashcard {flashcardData.id + 1}
+        </p>
+        <p>
+          {currentIndex + 1} / {flashCards.length}
+        </p>
+      </div>
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -196,12 +131,10 @@ const FlashCardResult = ({
   result,
   sessionId,
   onRestart,
-  onCreateNew,
 }: {
   result: ResultInstance;
   sessionId: string;
   onRestart: () => void;
-  onCreateNew: () => void;
 }) => {
   const router = useRouter();
 
@@ -236,16 +169,13 @@ const FlashCardResult = ({
         )}
       </ul>
       <Button onClick={onRestart}>Restart Session</Button>
-      <Button className="mt-2" onClick={onCreateNew}>
-        Create New Flashcard
-      </Button>
       <Button
         className="mt-2"
         onClick={() => {
           router.push(`/study-sessions/${sessionId}?tab=flashcards`);
         }}
       >
-        Recent Flashcards
+        Go Back
       </Button>
     </div>
   );

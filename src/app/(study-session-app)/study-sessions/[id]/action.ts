@@ -22,6 +22,7 @@ import { documentType, DocumentType } from "@/lib/constants";
 import { DocumentChat } from "@/service/documentChat";
 import { indexWebResource } from "@/service/studySession";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { revalidatePath } from "next/cache";
 
 export async function getStudySessionDocumentSummary(studySessionId: number) {
   const session = await auth.api.getSession({
@@ -45,6 +46,35 @@ export async function getStudySessionDocumentSummary(studySessionId: number) {
     .execute();
 
   return summaries.map((row) => row.doc_summary);
+}
+
+export async function deleteStudySession(studySessionId: number) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  const user = session?.user;
+  if (!session || !user) {
+    throw Error("User not found");
+  }
+
+  try {
+    const result = await db
+      .delete(studySession)
+      .where(
+        and(
+          eq(studySession.userId, user.id),
+          eq(studySession.id, studySessionId),
+        ),
+      );
+    if (result.rowCount === 0) {
+      return { error: "study session not found" };
+    }
+    revalidatePath("/study-sessions");
+    return { success: true };
+  } catch (error) {
+    return { error };
+  }
 }
 
 export async function getDocumentChat(
