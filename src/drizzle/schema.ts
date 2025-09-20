@@ -11,10 +11,11 @@ import {
 
 const timestampFields = {
   createdAt: timestamp("created_at")
-    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .$defaultFn(() => new Date())
     .notNull(),
   updatedAt: timestamp("updated_at")
-    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 };
 

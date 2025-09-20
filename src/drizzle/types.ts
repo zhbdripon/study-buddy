@@ -20,9 +20,19 @@ import {
   docFlashCardQuestion,
 } from "@/drizzle/schema";
 
+import { db } from ".";
+
+export type Tx = Parameters<typeof db.transaction>[0] extends (
+  tx: infer T,
+) => any
+  ? T
+  : never;
+
 type ReadonlyId<T> = T extends { id: infer U }
   ? Omit<T, "id"> & { readonly id: U }
   : T;
+
+export type DbOrTx = typeof db | Tx;
 
 export type User = ReadonlyId<typeof user.$inferSelect>;
 export type UserInsert = Omit<typeof user.$inferInsert, "id">;

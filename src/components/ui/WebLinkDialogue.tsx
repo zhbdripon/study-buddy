@@ -36,12 +36,20 @@ const WebLinkDialogue = () => {
     });
     addURL(url)
       .then((studySessionId: number) => {
+        if (studySessionId == null) {
+          throw new Error("Something went wrong");
+        }
         toast.success("Document summarized successfully!");
         router.push(`/study-sessions/${studySessionId}?tab=summary`);
       })
-      .catch((error) => {
-        console.error("Error analyzing document:", error);
-        toast.error("Failed to analyzing the document. Please try again.");
+      .catch((err) => {
+        toast.error(err.message);
+        // toast.error("Failed to analyzing the document. Please try again.");
+      })
+      .finally(() => {
+        setShowModal(false);
+        setUrl("");
+        setError(null);
       });
   }
 

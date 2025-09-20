@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import WebLinkDialogue from "@/components/ui/WebLinkDialogue";
 import { Upload } from "lucide-react";
 
-import { getStudySessions } from "./action";
+import { throwError } from "@/service/dataAccess/helpers";
+import { queryStudySessions } from "@/service/dataAccess/query";
 import { SessionCard } from "./SessionCard";
 
 const StudySessions = async () => {
-  const studySessions = await getStudySessions();
+  const studySessions = throwError(await queryStudySessions());
 
   return (
     <div className="p-6">

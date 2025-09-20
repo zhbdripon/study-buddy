@@ -12,18 +12,16 @@ export async function middleware(request: NextRequest) {
 
   if (!isPublicRoute && !sessionCookie) {
     if (request.nextUrl.pathname.startsWith("/api")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 400 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("Progress", request.nextUrl.pathname);
-
     const signInUrl = new URL("/auth/sign-in", request.url);
-    return NextResponse.redirect(signInUrl);
+    return NextResponse.redirect(signInUrl, 302);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next|static|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|auth|api/auth).*)"],
 };
