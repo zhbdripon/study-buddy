@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import WebLinkDialogue from "@/components/ui/WebLinkDialogue";
 import { Upload } from "lucide-react";
 
-import { throwError } from "@/service/dataAccess/helpers";
-import { queryStudySessions } from "@/service/dataAccess/query";
+import { getDataOrThrow } from "@/lib/error-utils";
+import { queryStudySessions } from "@/app/(study-session-app)/study-sessions/query";
 import { SessionCard } from "./SessionCard";
 
 const StudySessions = async () => {
-  const studySessions = throwError(await queryStudySessions());
+  const studySessions = getDataOrThrow(await queryStudySessions());
 
   return (
     <div className="p-6">

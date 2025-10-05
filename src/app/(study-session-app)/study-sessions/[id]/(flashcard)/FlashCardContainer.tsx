@@ -17,10 +17,7 @@ const FlashCardContainer = async ({
   const tab = params?.tab;
 
   if (tab === "flashcards" && page === "flashCardView" && flashcardId) {
-    const flashcardData = await getFlashCardData(
-      parseInt(sessionId),
-      parseInt(flashcardId),
-    );
+    const flashcardData = await getFlashCardData(parseInt(flashcardId));
     return (
       <FlashCardView sessionId={sessionId} flashcardData={flashcardData} />
     );

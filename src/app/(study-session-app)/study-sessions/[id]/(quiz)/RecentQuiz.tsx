@@ -1,8 +1,9 @@
-import { getRecentQuizzes } from "./action";
+import { getDataOrThrow } from "@/lib/error-utils";
+import { queryRecentQuizzes } from "./query";
 import RecentQuizCard from "./RecentQuizCard";
 
 export const RecentQuiz = async ({ sessionId }: { sessionId: string }) => {
-  const quizzes = await getRecentQuizzes(parseInt(sessionId));
+  const quizzes = getDataOrThrow(await queryRecentQuizzes(parseInt(sessionId)));
 
   if (!quizzes || quizzes.length === 0) {
     return <div>Your recent quizzes will be listed below</div>;

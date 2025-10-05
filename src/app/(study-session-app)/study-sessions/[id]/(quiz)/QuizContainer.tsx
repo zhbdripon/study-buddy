@@ -19,7 +19,7 @@ const QuizContainer = async ({
   let quizData: QuizData | undefined = undefined;
 
   if (quizId && tab === "quiz") {
-    quizData = await getQuizData(parseInt(sessionId), parseInt(quizId));
+    quizData = await getQuizData(parseInt(quizId));
 
     if (quizPage === "quizTaker" && quizData) {
       return <QuizTaker sessionId={sessionId} quizData={quizData} />;

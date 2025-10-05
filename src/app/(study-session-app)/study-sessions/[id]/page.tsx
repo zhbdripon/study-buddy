@@ -1,9 +1,15 @@
+import {
+  queryDocumentChat,
+  queryDocumentChatMessages,
+  queryStudySessionDocumentSummary,
+} from "@/app/(study-session-app)/study-sessions/query";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
-import { DocSummary } from "@/drizzle/types";
-import ChatPanel from "./(chat)";
+import { DocChatMessage, DocSummary } from "@/drizzle/types";
+import { getDataOrThrow } from "@/lib/error-utils";
+import { DocumentChat } from "./(chat)/DocumentChat";
+import InitializeChatButton from "./(chat)/InitializeChatButton";
 import FlashCardContainer from "./(flashcard)";
 import QuizContainer from "./(quiz)";
-import { getStudySessionDocumentSummary } from "./action";
 import Summary from "./Summary";
 import TabButton from "./TabButton";
 
@@ -17,9 +23,19 @@ const StudySession = async ({
   const { id: studySessionId } = await params;
   const { tab } = await searchParams;
 
-  const summaries: DocSummary[] = await getStudySessionDocumentSummary(
-    parseInt(studySessionId),
+  const summaries: DocSummary[] = getDataOrThrow(
+    await queryStudySessionDocumentSummary(parseInt(studySessionId)),
   );
+  const documentChatQuery = await queryDocumentChat(parseInt(studySessionId));
+  let messages: DocChatMessage[] = [];
+
+  if (documentChatQuery.success) {
+    const chat = documentChatQuery.data;
+    const messageQuery = await queryDocumentChatMessages(chat.id);
+    if (messageQuery.success) {
+      messages = messageQuery.data;
+    }
+  }
 
   return (
     <div className="flex flex-row w-full h-svh">
@@ -52,7 +68,11 @@ const StudySession = async ({
         </Tabs>
       </div>
       <div className="w-[450px] p-3 flex-shrink-0 flex h-full border-l border-[var(--border)]">
-        <ChatPanel studySessionId={studySessionId} />
+        {documentChatQuery.success ? (
+          <DocumentChat studySessionId={studySessionId} messages={messages} />
+        ) : (
+          <InitializeChatButton studySessionId={studySessionId} />
+        )}
       </div>
     </div>
   );

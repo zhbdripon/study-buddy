@@ -1,13 +1,16 @@
-import React from "react";
-import { getRecentFlashCards } from "./action";
+import { getDataOrThrow } from "@/lib/error-utils";
 import { RecentFlashCard } from "./RecentFlashCard";
+import { queryRecentFlashCards } from "./query";
 
 export const RecentFlashCards = async ({
   sessionId,
 }: {
   sessionId: string;
 }) => {
-  const recentFlashCards = await getRecentFlashCards(parseInt(sessionId));
+  const recentFlashCards = await getDataOrThrow(
+    await queryRecentFlashCards(parseInt(sessionId)),
+  );
+
   return (
     <div>
       <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mx-2">

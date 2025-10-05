@@ -1,32 +1,28 @@
 "use server";
 
-import { documentType } from "@/lib/constants";
-import {
-  throwError,
-  withAuth,
-  withErrorHandling,
-} from "@/service/dataAccess/helpers";
 import {
   insertDocumentMutation,
   insertDocumentSummary,
   insertStudySessionMutation,
-} from "@/service/dataAccess/mutation";
+} from "@/app/(study-session-app)/study-sessions/mutation";
+import { documentType } from "@/lib/constants";
+import { getDataOrThrow, withAuth, withErrorHandling } from "@/lib/error-utils";
 import { generateURLSummary } from "@/service/studySession";
 
 export async function addURL(url: string): Promise<number> {
-  const { title, summary } = throwError(
+  const { title, summary } = getDataOrThrow(
     await withAuth(async () => {
       return withErrorHandling(async () => await generateURLSummary(url));
     }),
   );
 
-  const { id: studySessionId } = throwError(
+  const { id: studySessionId } = getDataOrThrow(
     await insertStudySessionMutation({
       name: title ?? "Untitled session",
     }),
   );
 
-  const { id: documentId } = throwError(
+  const { id: documentId } = getDataOrThrow(
     await insertDocumentMutation({
       sessionId: studySessionId,
       meta: {
@@ -36,7 +32,7 @@ export async function addURL(url: string): Promise<number> {
     }),
   );
 
-  throwError(
+  getDataOrThrow(
     await insertDocumentSummary({
       documentId: documentId,
       summary,

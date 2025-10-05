@@ -1,34 +1,24 @@
 "use client";
 
-import { ChangeEventHandler, useEffect, useState, useTransition } from "react";
-
-import { type Message } from "@/components/ui/chat-message";
+import { ChangeEventHandler, useState } from "react";
 
 import { Chat } from "@/components/ui/chat";
 
+import { Message } from "@/components/ui/chat-message";
 import { DocChatMessage } from "@/drizzle/types";
-import { getChatMessages, sendChatMessage } from "../action";
 import { toast } from "sonner";
+import { sendChatMessage } from "../action";
 
 export const DocumentChat = ({
   studySessionId,
+  messages,
 }: {
   studySessionId: string;
+  messages: DocChatMessage[];
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesState, setMessagesState] = useState<Message[]>(messages);
   const [chatInputValue, setChatInputValue] = useState("");
-  const [isPending, startTransition] = useTransition();
   const [isGenerating, setIsGenerating] = useState(false);
-
-  useEffect(() => {
-    startTransition(() => {
-      getChatMessages(parseInt(studySessionId)).then(
-        (messages: DocChatMessage[]) => {
-          setMessages(messages);
-        },
-      );
-    });
-  }, [studySessionId]);
 
   const handleInputChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     setChatInputValue(e.target.value);
@@ -39,8 +29,8 @@ export const DocumentChat = ({
 
     setIsGenerating(true);
     setChatInputValue("");
-    setMessages([
-      ...messages,
+    setMessagesState((prev) => [
+      ...prev,
       {
         id: Number.MAX_SAFE_INTEGER,
         role: "user",
@@ -58,11 +48,12 @@ export const DocumentChat = ({
     };
 
     sendChatMessage(parseInt(studySessionId), newMessage)
-      .then((newMessages: Message[]) => {
-        setMessages((prevMessage) => mergeNewMessage(prevMessage, newMessages));
+      .then((newMessages) => {
+        setMessagesState((prevMessage) =>
+          mergeNewMessage(prevMessage, newMessages),
+        );
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         toast.message("Something went wrong");
       })
       .finally(() => {
@@ -74,13 +65,9 @@ export const DocumentChat = ({
     // TODO: implement query stop
   };
 
-  if (isPending) {
-    return <p>Loading...</p>;
-  }
-
   return (
     <Chat
-      messages={messages}
+      messages={messagesState}
       input={chatInputValue}
       handleInputChange={handleInputChange}
       handleSubmit={handleSubmit}

@@ -35,8 +35,8 @@ export const QuizTaker = ({
           `/study-sessions/${sessionId}?tab=quiz&page=results&itemId=${quizId}`,
         );
       })
-      .catch((error) => {
-        console.error("Failed to mark quiz as completed", error);
+      .catch(() => {
+        toast.error("Failed to mark quiz as completed");
       });
   };
 
@@ -45,14 +45,22 @@ export const QuizTaker = ({
 
     if (currentChoice) {
       setSavingAnswer(true);
-      await saveQuizAnswer(parseInt(sessionId), question.id, currentChoice)
-        .catch((error) => {
-          console.error("Failed to save quiz answer", error);
+      const insertedAnswer = await saveQuizAnswer(
+        parseInt(sessionId),
+        question.id,
+        currentChoice,
+      )
+        .then((res) => res)
+        .catch(() => {
           toast.error("Failed to save quiz answer");
         })
         .finally(() => {
           setSavingAnswer(false);
         });
+
+      if (!insertedAnswer) {
+        return;
+      }
     }
 
     if (questionsIndex === questions.length - 1) {

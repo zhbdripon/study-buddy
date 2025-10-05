@@ -23,10 +23,10 @@ export class DocumentChat {
   private embeddings: OpenAIEmbeddings;
   private llm: ChatOpenAI;
   private graphWithMemory: any;
+  private userId: string | undefined;
 
   constructor(
     private embeddingNameSpace: string,
-    private userId: string,
     private summary?: string,
   ) {
     this.llm = new ChatOpenAI({
@@ -40,7 +40,9 @@ export class DocumentChat {
     });
   }
 
-  async initializeChat() {
+  async initializeChat(userId: string) {
+    this.userId = userId;
+
     const pinecone = new PineconeClient({
       apiKey: process.env.PINECONE_API_KEY!,
     });
@@ -198,7 +200,7 @@ export class DocumentChat {
   async sendMessage(threadId: string, message: string): Promise<BaseMessage[]> {
     const input = { messages: [new HumanMessage(message)] };
     const config = {
-      configurable: { thread_id: threadId, user_id: this.userId },
+      configurable: { thread_id: threadId, user_id: this.userId! },
       streamMode: "values" as const,
     };
 

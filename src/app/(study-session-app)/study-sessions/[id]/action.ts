@@ -1,219 +1,96 @@
 "use server";
-import {
-  db,
-  docChat,
-  docChatMessage,
-  document,
-  documentSummary,
-  studySession,
-} from "@/drizzle";
-import { auth } from "@/lib/auth";
-import { and, eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
 
 import {
-  DocChat,
-  DocChatInsert,
-  DocChatMessage,
-  DocChatMessageInsert,
-} from "@/drizzle/types";
+  insertDocChatMessagesMutation,
+  insertDocumentChatMutation,
+} from "@/app/(study-session-app)/study-sessions/mutation";
+import {
+  queryDocumentChat,
+  queryDocuments,
+  queryStudySessionDocumentSummary,
+} from "@/app/(study-session-app)/study-sessions/query";
+import { DocChat, DocChatMessage, DocChatMessageInsert } from "@/drizzle/types";
 import { documentType, DocumentType } from "@/lib/constants";
+import { getDataOrThrow, withAuth, withErrorHandling } from "@/lib/error-utils";
 import { DocumentChat } from "@/service/documentChat";
 import { indexWebResource } from "@/service/studySession";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { revalidatePath } from "next/cache";
 
-export async function getStudySessionDocumentSummary(studySessionId: number) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  const user = session?.user;
-  if (!user) return [];
-
-  const summaries = await db
-    .select()
-    .from(documentSummary)
-    .innerJoin(document, eq(document.id, documentSummary.documentId))
-    .innerJoin(studySession, eq(studySession.id, document.sessionId))
-    .where(
-      and(
-        eq(studySession.userId, user.id),
-        eq(studySession.id, studySessionId),
-      ),
-    )
-    .execute();
-
-  return summaries.map((row) => row.doc_summary);
-}
-
-export async function deleteStudySession(studySessionId: number) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  const user = session?.user;
-  if (!session || !user) {
-    throw Error("User not found");
-  }
-
-  try {
-    const result = await db
-      .delete(studySession)
-      .where(
-        and(
-          eq(studySession.userId, user.id),
-          eq(studySession.id, studySessionId),
-        ),
-      );
-    if (result.rowCount === 0) {
-      return { error: "study session not found" };
-    }
-    revalidatePath("/study-sessions");
-    return { success: true };
-  } catch (error) {
-    return { error };
-  }
-}
-
-export async function getDocumentChat(
-  studySessionId: number,
-): Promise<DocChat> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  const user = session?.user;
-  if (!user) return Promise.reject("User not found");
-
-  const result = await db
-    .select()
-    .from(docChat)
-    .innerJoin(studySession, eq(studySession.id, docChat.sessionId))
-    .where(
-      and(
-        eq(studySession.userId, user.id),
-        eq(studySession.id, studySessionId),
-      ),
-    )
-    .execute();
-
-  return result[0]?.doc_chat;
-}
-
 export async function initializeDocumentChat(
   studySessionId: number,
 ): Promise<DocChat> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [document, ...rest] = getDataOrThrow(
+    await queryDocuments(studySessionId),
+  );
 
-  const user = session?.user;
-  if (!user) {
-    throw Error("User not found");
-  }
-
-  const result = await db
-    .select()
-    .from(document)
-    .innerJoin(studySession, eq(studySession.id, studySessionId))
-    .where(
-      and(
-        eq(studySession.userId, user.id),
-        eq(document.sessionId, studySessionId),
-      ),
-    )
-    .limit(1)
-    .execute();
-
-  const doc = result[0]?.documents;
-
-  if (doc && doc.meta) {
-    const meta = doc.meta as { type: DocumentType; url: string };
+  if (document && document.meta) {
+    const meta = document.meta as { type: DocumentType; url: string };
 
     if (meta.type === documentType.webUrl && meta.url) {
-      const result = await indexWebResource(meta.url);
+      const indexedData = await indexWebResource(meta.url);
 
-      if (result && result.namespace) {
-        return await db
-          .insert(docChat)
-          .values({
-            title: result.namespace,
+      if (indexedData && indexedData.namespace) {
+        const chat = getDataOrThrow(
+          await insertDocumentChatMutation({
+            title: indexedData.namespace,
             sessionId: studySessionId,
-            embeddingPath: result.namespace,
+            embeddingPath: indexedData.namespace,
             threadId: uuidv4(),
-          } as DocChatInsert)
-          .returning()
-          .then((res) => res[0]);
+          }),
+        );
+
+        revalidatePath(`/study-sessions/${studySessionId}`);
+        return Promise.resolve(chat);
       }
     }
   }
-  return Promise.reject("Something went wrong.");
+  return Promise.reject("Couldn't initialize chat");
 }
 
 export async function sendChatMessage(
   studySessionId: number,
   message: string,
 ): Promise<DocChatMessage[]> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const messages = getDataOrThrow(
+    await withAuth(async (user) => {
+      return withErrorHandling(async () => {
+        const chat = getDataOrThrow(await queryDocumentChat(studySessionId));
+        const summaries = getDataOrThrow(
+          await queryStudySessionDocumentSummary(studySessionId),
+        );
+        const summaryData = summaries.reduce((totalSummary, currSummary) => {
+          return (totalSummary += currSummary.summary ?? "");
+        }, "");
 
-  const user = session?.user;
-  if (!user) {
-    throw Error("User not found");
-  }
+        const documentChat = new DocumentChat(
+          chat.embeddingPath,
+          summaryData ? summaryData : undefined,
+        );
 
-  const chat = await getDocumentChat(studySessionId);
-  const summaries = await getStudySessionDocumentSummary(studySessionId);
-  const summaryData = summaries.reduce((totalSummary, currSummary) => {
-    return (totalSummary += currSummary.summary ?? "");
-  }, "");
+        await documentChat.initializeChat(user.id);
+        const messages = (await documentChat.sendMessage(
+          chat.threadId,
+          message,
+        )) as BaseMessage[];
 
-  try {
-    const documentChat = new DocumentChat(
-      chat.embeddingPath,
-      user.id,
-      summaryData ? summaryData : undefined,
-    );
-    await documentChat.initializeChat();
-    const messages: BaseMessage[] = await documentChat.sendMessage(
-      chat.threadId,
-      message,
-    );
-
-    return db
-      .insert(docChatMessage)
-      .values(
-        messages.map(
+        const newMessagePayload = messages.map(
           (message: BaseMessage) =>
             ({
               role: message instanceof HumanMessage ? "user" : "assistant",
               content: message.content,
               chatId: chat.id,
             }) as DocChatMessageInsert,
-        ),
-      )
-      .returning();
-  } catch (error) {
-    console.log(error);
-    return Promise.reject("Something went wrong");
-  }
-}
+        );
 
-export async function getChatMessages(
-  studySessionId: number,
-): Promise<DocChatMessage[]> {
-  const chat = await getDocumentChat(studySessionId);
-
-  if (!chat) {
-    return Promise.reject("Chat doesn't exist");
-  }
-
-  return db
-    .select()
-    .from(docChatMessage)
-    .where(eq(docChatMessage.chatId, chat.id))
-    .execute();
+        return getDataOrThrow(
+          await insertDocChatMessagesMutation(newMessagePayload),
+        );
+      });
+    }),
+  );
+  revalidatePath(`/study-sessions/${studySessionId}`);
+  return messages;
 }

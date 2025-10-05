@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { deleteStudySession } from "./[id]/action";
+import { deleteStudySessionMutation } from "./mutation";
 
 export const SessionCard = ({ session }: { session: StudySession }) => {
   const router = useRouter();
@@ -58,9 +58,9 @@ const SessionActionMenu = ({
       <DropdownMenuContent className="w-56" align="start">
         <DropdownMenuGroup>
           <DropdownMenuItem
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              deleteStudySession(session.id)
+              deleteStudySessionMutation(session.id)
                 .then((res) => {
                   if (res.success) {
                     toast.success("Study session deleted successfully");
@@ -69,8 +69,7 @@ const SessionActionMenu = ({
                     toast.error("Failed to delete the study session");
                   }
                 })
-                .catch((error) => {
-                  console.error("Error deleting study session:", error);
+                .catch(() => {
                   toast.error("Failed to delete the study session");
                 });
             }}

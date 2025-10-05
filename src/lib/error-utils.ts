@@ -3,31 +3,43 @@ import { User } from "better-auth";
 import { DrizzleError } from "drizzle-orm";
 import { headers } from "next/headers";
 
-export type DataAccessResult<T> =
-  | {
-      success: true;
-      data: T;
-    }
-  | {
-      success: false;
-      error: DataAccessError;
-    };
+export type AuthError = {
+  type: "no-user";
+};
+
+export type PermissionError = {
+  type: "no-permission";
+};
+
+export type DBError = {
+  type: "orm-error";
+  error: DrizzleError;
+};
+
+export type UnknownError = {
+  type: "unknown-error";
+  error: unknown;
+};
+
+export type GenericError = AuthError | PermissionError | DBError | UnknownError;
 
 export type DataAccessError =
-  | {
-      type: "no-user";
-    }
-  | {
-      type: "no-permission";
-    }
-  | {
-      type: "orm-error";
-      error: DrizzleError;
-    }
-  | {
-      type: "unknown-error";
-      error: unknown;
-    };
+  | AuthError
+  | PermissionError
+  | DBError
+  | UnknownError;
+
+export type GenericSuccess<T> = {
+  success: true;
+  data: T;
+};
+
+export type GenericFailed = {
+  success: false;
+  error: GenericError;
+};
+
+export type GenericResult<T> = GenericSuccess<T> | GenericFailed;
 
 export class ThrowableDataAccessLayerError extends Error {
   dalError: DataAccessError;
@@ -37,7 +49,7 @@ export class ThrowableDataAccessLayerError extends Error {
   }
 }
 
-export function createErrorReturn(e: DataAccessError): DataAccessResult<never> {
+export function createErrorReturn(e: DataAccessError): GenericFailed {
   return {
     success: false,
     error: e,
@@ -46,7 +58,7 @@ export function createErrorReturn(e: DataAccessError): DataAccessResult<never> {
 
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
-): Promise<DataAccessResult<T>> {
+): Promise<GenericResult<T>> {
   try {
     const res = await operation();
     return {
@@ -73,8 +85,8 @@ export async function withErrorHandling<T>(
 }
 
 export async function withAuth<T>(
-  operation: (user: User) => Promise<DataAccessResult<T>>,
-): Promise<DataAccessResult<T>> {
+  operation: (user: User) => Promise<GenericResult<T>>,
+): Promise<GenericResult<T>> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -91,7 +103,7 @@ export async function withAuth<T>(
   return await operation(session.user);
 }
 
-function getErrorMessage(error: DataAccessError): string {
+function getErrorMessage(error: GenericError): string {
   if (error.type === "no-user") {
     return "User not found";
   }
@@ -103,11 +115,13 @@ function getErrorMessage(error: DataAccessError): string {
   if (error.type === "orm-error") {
     return "Data access error";
   }
+
+  console.error("Unknown error", error.error);
   return "Something went wrong";
 }
 
-export function throwError<T>(result: DataAccessResult<T>): T | never {
-  if (result.success) return result.data;
+export function getDataOrThrow<T>(result: GenericResult<T>): T | never {
+  if (result.success) return result.data as T;
 
   throw new Error(getErrorMessage(result.error));
 }
