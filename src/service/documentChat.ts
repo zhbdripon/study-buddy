@@ -1,5 +1,5 @@
-import "cheerio";
 import type { Document } from "@langchain/core/documents";
+import "cheerio";
 
 import {
   AIMessage,
@@ -9,8 +9,8 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
-import { ToolNode, toolsCondition } from "@langchain/langgraph/prebuilt";
+import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 import { PineconeStore } from "@langchain/pinecone";
@@ -76,10 +76,23 @@ export class DocumentChat {
       },
     );
 
-    const tools = new ToolNode([retrieve]);
+    const summaryTool = tool(
+      (): string => {
+        return this.summary ?? "No Summary Data";
+      },
+      {
+        name: "summary",
+        description:
+          "summary of the document. Use to answer global questions about the document",
+        responseFormat: "content",
+      },
+    );
+
+    const retrievalToolNode = new ToolNode([retrieve]);
+    const summaryToolNode = new ToolNode([summaryTool]);
 
     const queryOrRespond = async (state: typeof MessagesAnnotation.State) => {
-      const llmWithTools = this.llm.bindTools([retrieve]);
+      const llmWithTools = this.llm.bindTools([retrieve, summaryTool]);
       const response = await llmWithTools.invoke(state.messages);
       // MessagesState appends messages to state instead of overwriting
       return { messages: [response] };
@@ -126,64 +139,33 @@ export class DocumentChat {
       return { messages: [response] };
     };
 
-    const classifyQuery = async (state: typeof MessagesAnnotation.State) => {
-      const lastUserMsg = state.messages[state.messages.length - 1];
-      const classificationPrompt = [
-        new SystemMessage(
-          "Classify the user query as 'global' if it asks about the overall document (summary, topics, what it's about), otherwise 'local'. Respond with only one word: 'global' or 'local'.",
-        ),
-        lastUserMsg,
-      ];
-      const response = await this.llm.invoke(classificationPrompt);
-      const content = response.content.toString().toLowerCase();
-
-      return content.includes("global")
-        ? { decision: "global" }
-        : { decision: "local" };
-    };
-
-    const useSummary = async (state: typeof MessagesAnnotation.State) => {
-      const lastMessage = state.messages[state.messages.length - 1];
-      const summaryText = this.summary ?? "No Summary Data";
-      const systemMessage = new SystemMessage(
-        "You are a helpful assistant. Use the provided summary to answer concisely.",
-      );
-      const summaryMessage = new SystemMessage(
-        `Document Summary:\n${summaryText}`,
-      );
-
-      const response = await this.llm.invoke([
-        systemMessage,
-        lastMessage,
-        summaryMessage,
-      ]);
-
-      return { messages: [response] };
-    };
-
-    // Extend MessagesAnnotation.State to include 'decision' property for type safety
-    type StateWithDecision = typeof MessagesAnnotation.State & {
-      decision?: string;
-    };
+    function toolsCondition(state) {
+      const message = Array.isArray(state)
+        ? state[state.length - 1]
+        : state.messages[state.messages.length - 1];
+      if ("tool_calls" in message && (message.tool_calls?.length ?? 0) > 0) {
+        return message.tool_calls[0].name === "retrieve"
+          ? "retrievalToolNode"
+          : "summaryToolNode";
+      } else {
+        return END;
+      }
+    }
 
     const graphBuilder = new StateGraph(MessagesAnnotation)
-      .addNode("classifyQuery", classifyQuery)
       .addNode("queryOrRespond", queryOrRespond)
-      .addNode("tools", tools)
+      .addNode("retrievalToolNode", retrievalToolNode)
+      .addNode("summaryToolNode", summaryToolNode)
       .addNode("generate", generate)
-      .addNode("useSummary", useSummary)
-
-      .addEdge("__start__", "classifyQuery")
-      .addConditionalEdges("classifyQuery", (state: StateWithDecision) => {
-        return state.decision === "local" ? "queryOrRespond" : "useSummary";
-      })
-      .addEdge("useSummary", "__end__")
+      .addEdge("__start__", "queryOrRespond")
 
       .addConditionalEdges("queryOrRespond", toolsCondition, {
         __end__: "__end__",
-        tools: "tools",
+        retrievalToolNode: "retrievalToolNode",
+        summaryToolNode: "summaryToolNode",
       })
-      .addEdge("tools", "generate")
+      .addEdge("summaryToolNode", "generate")
+      .addEdge("retrievalToolNode", "generate")
       .addEdge("generate", "__end__");
 
     const checkPointer = PostgresSaver.fromConnString(
