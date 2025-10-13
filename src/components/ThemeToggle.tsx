@@ -2,6 +2,8 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Sun, SunDim } from "lucide-react";
+import { Button } from "./ui/button";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -14,12 +16,13 @@ export default function ThemeToggle() {
   if (!mounted) return null;
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white w-full"
       suppressHydrationWarning
+      className="cursor-pointer"
     >
-      {theme === "dark" ? "🌞 Light Mode" : "🌙 Dark Mode"}
-    </button>
+      {theme === "dark" ? <Sun /> : <SunDim />}
+    </Button>
   );
 }
