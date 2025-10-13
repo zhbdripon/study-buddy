@@ -11,10 +11,10 @@ import {
   queryStudySessionDocumentSummary,
 } from "@/app/(study-session-app)/study-sessions/query";
 import { DocChat, DocChatMessage, DocChatMessageInsert } from "@/drizzle/types";
-import { documentType, DocumentType } from "@/lib/constants";
+import { documentTypes, DocumentType } from "@/lib/constants";
 import { getDataOrThrow, withAuth, withErrorHandling } from "@/lib/error-utils";
 import { DocumentChat } from "@/service/documentChat";
-import { indexWebResource } from "@/service/studySession";
+import { indexWebResource, indexYoutubeResource } from "@/service/document";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { revalidatePath } from "next/cache";
 
@@ -27,25 +27,33 @@ export async function initializeDocumentChat(
   );
 
   if (document && document.meta) {
-    const meta = document.meta as { type: DocumentType; url: string };
+    const meta = document.meta as {
+      type: Extract<DocumentType, "webUrl" | "youtube">;
+      url: string;
+    };
+    let indexedData: { namespace: string } | null = null;
 
-    if (meta.type === documentType.webUrl && meta.url) {
-      const indexedData = await indexWebResource(meta.url);
-
-      if (indexedData && indexedData.namespace) {
-        const chat = getDataOrThrow(
-          await insertDocumentChatMutation({
-            title: indexedData.namespace,
-            sessionId: studySessionId,
-            embeddingPath: indexedData.namespace,
-            threadId: uuidv4(),
-          }),
-        );
-
-        revalidatePath(`/study-sessions/${studySessionId}`);
-        return Promise.resolve(chat);
-      }
+    if (meta.type === documentTypes.youtube && meta.url) {
+      indexedData = await indexYoutubeResource(meta.url);
+    } else if (meta.type === documentTypes.webUrl && meta.url) {
+      indexedData = await indexWebResource(meta.url);
+    } else {
+      return Promise.reject(
+        "Unsupported document type for chat initialization",
+      );
     }
+
+    const chat = getDataOrThrow(
+      await insertDocumentChatMutation({
+        title: indexedData.namespace,
+        sessionId: studySessionId,
+        embeddingPath: indexedData.namespace,
+        threadId: uuidv4(),
+      }),
+    );
+
+    revalidatePath(`/study-sessions/${studySessionId}`);
+    return Promise.resolve(chat);
   }
   return Promise.reject("Couldn't initialize chat");
 }
@@ -71,10 +79,17 @@ export async function sendChatMessage(
         );
 
         await documentChat.initializeChat(user.id);
+        console.log(
+          "||||||| Initialized chat",
+          user.id,
+          chat.embeddingPath,
+          summaryData.substring(0, 100),
+        );
         const messages = (await documentChat.sendMessage(
           chat.threadId,
           message,
         )) as BaseMessage[];
+        console.log("||||||||| Received messages", messages);
 
         const newMessagePayload = messages.map(
           (message: BaseMessage) =>

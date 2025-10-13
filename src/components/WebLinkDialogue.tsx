@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "./button";
-import { Input } from "./input";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { documentTypes } from "@/lib/constants";
 
 const urlSchema = z.string().url();
 
@@ -34,7 +35,7 @@ const WebLinkDialogue = () => {
       description:
         "This may take a few minutes depending on the document size.",
     });
-    addURL(url)
+    addURL(url, documentTypes.webUrl)
       .then((studySessionId: number) => {
         if (studySessionId == null) {
           throw new Error("Something went wrong");

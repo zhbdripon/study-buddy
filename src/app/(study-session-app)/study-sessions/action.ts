@@ -5,14 +5,22 @@ import {
   insertDocumentSummary,
   insertStudySessionMutation,
 } from "@/app/(study-session-app)/study-sessions/mutation";
-import { documentType } from "@/lib/constants";
+import { documentTypes } from "@/lib/constants";
 import { getDataOrThrow, withAuth, withErrorHandling } from "@/lib/error-utils";
-import { generateURLSummary } from "@/service/studySession";
+import { generateURLSummary, generateYoutubeSummary } from "@/service/document";
 
-export async function addURL(url: string): Promise<number> {
+export async function addURL(
+  url: string,
+  docType: "webUrl" | "youtube",
+): Promise<number> {
   const { title, summary } = getDataOrThrow(
     await withAuth(async () => {
-      return withErrorHandling(async () => await generateURLSummary(url));
+      return withErrorHandling(async () => {
+        if (docType === documentTypes.youtube) {
+          return await generateYoutubeSummary(url);
+        }
+        return await generateURLSummary(url);
+      });
     }),
   );
 
@@ -26,7 +34,7 @@ export async function addURL(url: string): Promise<number> {
     await insertDocumentMutation({
       sessionId: studySessionId,
       meta: {
-        type: documentType.webUrl,
+        type: docType,
         url,
       },
     }),

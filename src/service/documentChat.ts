@@ -31,7 +31,7 @@ export class DocumentChat {
   ) {
     this.llm = new ChatOpenAI({
       model: "gpt-4o-mini",
-      temperature: 0,
+      temperature: 0.2,
     });
 
     this.embeddings = new OpenAIEmbeddings({
@@ -78,13 +78,14 @@ export class DocumentChat {
 
     const summaryTool = tool(
       (): string => {
-        return this.summary ?? "No Summary Data";
+        return "Document summary: " + (this.summary ?? "No Summary Data");
       },
       {
         name: "summary",
         description:
           "summary of the document. Use to answer global questions about the document",
         responseFormat: "content",
+        schema: z.object({}),
       },
     );
 
@@ -93,7 +94,18 @@ export class DocumentChat {
 
     const queryOrRespond = async (state: typeof MessagesAnnotation.State) => {
       const llmWithTools = this.llm.bindTools([retrieve, summaryTool]);
-      const response = await llmWithTools.invoke(state.messages);
+
+      const systemPrompt = new SystemMessage(
+        "You can use tools to help answer the question. " +
+          "Use 'retrieve' when the user asks about something in the document. " +
+          "Use 'summary' when the question is about the overall document. " +
+          "If neither applies, answer directly.",
+      );
+
+      const response = await llmWithTools.invoke([
+        systemPrompt,
+        ...state.messages,
+      ]);
       // MessagesState appends messages to state instead of overwriting
       return { messages: [response] };
     };
@@ -118,10 +130,9 @@ export class DocumentChat {
         "You are an assistant for question-answering tasks. " +
         "Use the following pieces of retrieved context to answer " +
         "the question. If you don't know the answer, say that you " +
-        "don't know. Use three sentences maximum and keep the " +
-        "answer concise." +
+        "don't know. Depending on the question the answer can be short or long but keep it not more than five sentences." +
         "\n\n" +
-        `${docsContent}`;
+        `context: ${docsContent}`;
 
       const conversationMessages = state.messages.filter(
         (message: BaseMessage) =>
@@ -157,8 +168,8 @@ export class DocumentChat {
       .addNode("retrievalToolNode", retrievalToolNode)
       .addNode("summaryToolNode", summaryToolNode)
       .addNode("generate", generate)
-      .addEdge("__start__", "queryOrRespond")
 
+      .addEdge("__start__", "queryOrRespond")
       .addConditionalEdges("queryOrRespond", toolsCondition, {
         __end__: "__end__",
         retrievalToolNode: "retrievalToolNode",

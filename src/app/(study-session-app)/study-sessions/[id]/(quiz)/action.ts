@@ -1,8 +1,8 @@
 "use server";
-import { DocQuiz, DocQuizOption } from "@/drizzle/types";
-import { documentType } from "@/lib/constants";
+import { DocQuiz, DocQuizOption, DocumentMeta } from "@/drizzle/types";
+import { documentTypes } from "@/lib/constants";
 import { getDataOrThrow } from "@/lib/error-utils";
-import { MCQGenerator, QuizQuestionFromAI } from "@/service/mcqGenerator";
+import { generateMCQ } from "@/service/mcqGenerator";
 import { queryDocuments, queryStudySessionDocumentSummary } from "../../query";
 import {
   insertQuizAnswerMutation,
@@ -51,15 +51,15 @@ export async function createNewQuiz(studySessionId: number) {
   const summary = getDataOrThrow(
     await queryStudySessionDocumentSummary(studySessionId),
   )[0].summary;
-  const documentMeta = document?.meta as {
-    type: string;
-    url: string;
-  };
+  const documentMeta = document?.meta as DocumentMeta;
 
-  if (document && summary && documentMeta.type === documentType.webUrl) {
-    const mcqGen = new MCQGenerator(summary, documentMeta.url);
-    await mcqGen.initialize();
-    const mcq: QuizQuestionFromAI[] = await mcqGen.generateMcq(10);
+  if (
+    document &&
+    summary &&
+    (documentMeta.type === documentTypes.webUrl ||
+      documentMeta.type === documentTypes.youtube)
+  ) {
+    const mcq = await generateMCQ(documentMeta, summary, 10);
 
     const quiz = getDataOrThrow(
       await insertQuizMutation({
@@ -119,11 +119,8 @@ export async function saveQuizAnswer(
   );
 }
 
-export async function markQuizAsCompleted(
-  studySessionId: number,
-  quizId: number,
-): Promise<DocQuiz> {
-  const quiz = await getDataOrThrow(await queryQuiz(quizId, studySessionId));
+export async function markQuizAsCompleted(quizId: number): Promise<DocQuiz> {
+  const quiz = await getDataOrThrow(await queryQuiz(quizId));
 
   const updatedQuiz = await getDataOrThrow(
     await updateQuizMutation(quiz.id, { isCompleted: true }),

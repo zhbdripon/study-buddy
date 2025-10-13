@@ -2,10 +2,11 @@
 import {
   DocFlashCardQuestion,
   DocFlashCardQuestionInsert,
+  DocumentMeta,
 } from "@/drizzle/types";
-import { documentType } from "@/lib/constants";
+import { documentTypes } from "@/lib/constants";
 import { getDataOrThrow } from "@/lib/error-utils";
-import { FlashCardFromAI, FlashCardService } from "@/service/flashcards";
+import { FlashCardFromAI, generateFlashCards } from "@/service/flashcards";
 import { queryDocuments, queryStudySessionDocumentSummary } from "../../query";
 import {
   insertFlashCardMutation,
@@ -25,16 +26,15 @@ export async function createFlashCard(
   const summary = getDataOrThrow(
     await queryStudySessionDocumentSummary(studySessionId),
   )[0].summary;
-  const documentMeta = document?.meta as {
-    type: string;
-    url: string;
-  };
+  const documentMeta = document?.meta as DocumentMeta;
 
-  if (summary && documentMeta.type === documentType.webUrl) {
-    const flashCardService = new FlashCardService(summary, documentMeta.url);
-    await flashCardService.initialize();
+  if (
+    summary &&
+    (documentMeta.type === documentTypes.webUrl ||
+      documentMeta.type === documentTypes.youtube)
+  ) {
     const flashCardQuestionsFromAI: FlashCardFromAI[] =
-      await flashCardService.generateFlashCards(10);
+      await generateFlashCards(documentMeta, summary, 10);
 
     const flashCard = getDataOrThrow(
       await insertFlashCardMutation({

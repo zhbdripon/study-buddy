@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import { RecentQuiz } from "./action";
 import { useRouter } from "next/navigation";
+import { RecentQuiz } from "./query";
 
 const RecentQuizCard = ({
   quiz,

@@ -6,7 +6,11 @@ export const RecentQuiz = async ({ sessionId }: { sessionId: string }) => {
   const quizzes = getDataOrThrow(await queryRecentQuizzes(parseInt(sessionId)));
 
   if (!quizzes || quizzes.length === 0) {
-    return <div>Your recent quizzes will be listed below</div>;
+    return (
+      <div className="flex justify-center gap-y-8">
+        You haven&apos;t taken any quizzes yet.
+      </div>
+    );
   }
 
   return (

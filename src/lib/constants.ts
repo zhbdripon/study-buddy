@@ -1,8 +1,9 @@
-export const documentType = {
+export const documentTypes = {
   webUrl: "webUrl",
   pdf: "pdf",
   docx: "docx",
   text: "text",
+  youtube: "youtube",
 } as const;
 
-export type DocumentType = (typeof documentType)[keyof typeof documentType];
+export type DocumentType = (typeof documentTypes)[keyof typeof documentTypes];

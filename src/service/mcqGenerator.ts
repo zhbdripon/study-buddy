@@ -1,10 +1,11 @@
+import { DocQuizQuestion, DocumentMeta } from "@/drizzle/types";
 import { shuffleArray } from "@/lib/utils";
-import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
-import { type Document } from "@langchain/core/documents";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
+import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { DocQuizQuestion } from "@/drizzle/types";
+import { DocumentLoader } from "./documentLoader";
 
 export type QuizQuestionFromAI = Omit<
   DocQuizQuestion,
@@ -15,23 +16,15 @@ export class MCQGenerator {
   private splitterDocs: Document<Record<string, any>>[] = [];
   private llm: ChatOpenAI;
 
-  constructor(
-    private docSummary: string,
-    private url: string,
-  ) {
+  constructor(private docSummary: string) {
     this.llm = new ChatOpenAI({
       model: "gpt-4o-mini",
       temperature: 0,
     });
   }
 
-  async initialize() {
-    const pTagSelector = "article, main, .content, #main, #post";
-    const cheerioLoader = new CheerioWebBaseLoader(this.url, {
-      selector: pTagSelector,
-    });
-
-    const docs = await cheerioLoader.load();
+  async initialize(loader: BaseDocumentLoader) {
+    const docs = await loader.load();
 
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
@@ -108,5 +101,54 @@ export class MCQGenerator {
       }
     }
     return shuffleArray(mcq.slice(0, numberOfMCQ));
+  }
+}
+
+export async function generateMCQFromWebUrl(
+  url: string,
+  docSummary: string,
+  numberOfMCQ: number,
+): Promise<QuizQuestionFromAI[]> {
+  const mcqGen = new MCQGenerator(docSummary);
+  await mcqGen.initialize(DocumentLoader.fromUrl(url));
+  const mcq: QuizQuestionFromAI[] = await mcqGen.generateMcq(numberOfMCQ);
+
+  return mcq;
+}
+
+export async function generateMCQFromYoutubeUrl(
+  url: string,
+  docSummary: string,
+  numberOfMCQ: number,
+): Promise<QuizQuestionFromAI[]> {
+  const loader = DocumentLoader.fromYoutubeTranscript(url);
+  const mcqGen = new MCQGenerator(docSummary);
+  await mcqGen.initialize(loader);
+  const mcq: QuizQuestionFromAI[] = await mcqGen.generateMcq(numberOfMCQ);
+
+  return mcq;
+}
+
+export async function generateMCQ(
+  documentMeta: DocumentMeta,
+  docSummary: string,
+  numberOfMCQ: number,
+): Promise<QuizQuestionFromAI[]> {
+  if (documentMeta.type === "webUrl") {
+    return await generateMCQFromWebUrl(
+      documentMeta.url,
+      docSummary,
+      numberOfMCQ,
+    );
+  } else if (documentMeta.type === "youtube") {
+    return await generateMCQFromYoutubeUrl(
+      documentMeta.url,
+      docSummary,
+      numberOfMCQ,
+    );
+  } else {
+    throw new Error(
+      "MCQ generation is only supported for webUrl and youtube document types.",
+    );
   }
 }

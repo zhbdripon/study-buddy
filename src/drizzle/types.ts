@@ -21,6 +21,7 @@ import {
 } from "@/drizzle/schema";
 
 import { db } from ".";
+import { DocumentType } from "@/lib/constants";
 
 export type Tx = Parameters<typeof db.transaction>[0] extends (
   tx: infer T,
@@ -113,3 +114,12 @@ export type DocFlashCardQuestionInsert = Omit<
   typeof docFlashCardQuestion.$inferInsert,
   "id"
 >;
+
+export type DocumentMeta =
+  | {
+      type: Extract<DocumentType, "webUrl" | "youtube">;
+      url: string;
+    }
+  | {
+      type: Exclude<DocumentType, "webUrl" | "youtube">;
+    };

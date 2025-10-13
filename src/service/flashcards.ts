@@ -1,10 +1,12 @@
-import { DocFlashCardQuestion } from "@/drizzle/types";
+import { DocFlashCardQuestion, DocumentMeta } from "@/drizzle/types";
 import { shuffleArray } from "@/lib/utils";
-import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { DocumentLoader } from "./documentLoader";
+import { documentTypes } from "@/lib/constants";
 
 export type FlashCardFromAI = Pick<DocFlashCardQuestion, "question" | "answer">;
 
@@ -12,23 +14,15 @@ export class FlashCardService {
   private splitterDocs: Document<Record<string, any>>[] = [];
   private llm: ChatOpenAI;
 
-  constructor(
-    private docSummary: string,
-    private url: string,
-  ) {
+  constructor(private docSummary: string) {
     this.llm = new ChatOpenAI({
       model: "gpt-4o-mini",
       temperature: 0,
     });
   }
 
-  async initialize() {
-    const pTagSelector = "article, main, .content, #main, #post";
-    const cheerioLoader = new CheerioWebBaseLoader(this.url, {
-      selector: pTagSelector,
-    });
-
-    const docs = await cheerioLoader.load();
+  async initialize(loader: BaseDocumentLoader) {
+    const docs = await loader.load();
 
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
@@ -105,5 +99,55 @@ export class FlashCardService {
       }
     }
     return shuffleArray(flashcards.slice(0, numberOfFlashCards));
+  }
+}
+
+export async function generateFlashCardsFromUrl(
+  url: string,
+  docSummary: string,
+  numberOfFlashCards: number,
+): Promise<FlashCardFromAI[]> {
+  const loader = DocumentLoader.fromUrl(url);
+  const flashCardService = new FlashCardService(docSummary);
+  await flashCardService.initialize(loader);
+  const flashcards: FlashCardFromAI[] =
+    await flashCardService.generateFlashCards(numberOfFlashCards);
+  return flashcards;
+}
+
+export async function generateFlashCardsFromYoutubeTranscript(
+  url: string,
+  docSummary: string,
+  numberOfFlashCards: number,
+): Promise<FlashCardFromAI[]> {
+  const loader = DocumentLoader.fromYoutubeTranscript(url);
+  const flashCardService = new FlashCardService(docSummary);
+  await flashCardService.initialize(loader);
+  const flashcards: FlashCardFromAI[] =
+    await flashCardService.generateFlashCards(numberOfFlashCards);
+  return flashcards;
+}
+
+export async function generateFlashCards(
+  documentMeta: DocumentMeta,
+  docSummary: string,
+  numberOfFlashCards: number,
+): Promise<FlashCardFromAI[]> {
+  if (documentMeta.type === documentTypes.webUrl) {
+    return await generateFlashCardsFromUrl(
+      documentMeta.url,
+      docSummary,
+      numberOfFlashCards,
+    );
+  } else if (documentMeta.type === documentTypes.youtube) {
+    return await generateFlashCardsFromYoutubeTranscript(
+      documentMeta.url,
+      docSummary,
+      numberOfFlashCards,
+    );
+  } else {
+    throw new Error(
+      "Flashcard generation is only supported for webUrl and youtube document types.",
+    );
   }
 }

@@ -24,16 +24,7 @@ export const FlashCardView = ({
   );
 
   if (currentIndex >= flashCards.length && flashCards.length > 0) {
-    return (
-      <FlashCardResult
-        sessionId={sessionId}
-        result={result}
-        onRestart={() => {
-          setCurrentIndex(0);
-          setResult({});
-        }}
-      />
-    );
+    return <FlashCardResult sessionId={sessionId} result={result} />;
   }
 
   const flashCard = flashCards[currentIndex];
@@ -130,11 +121,9 @@ export const FlashCardView = ({
 const FlashCardResult = ({
   result,
   sessionId,
-  onRestart,
 }: {
   result: ResultInstance;
   sessionId: string;
-  onRestart: () => void;
 }) => {
   const router = useRouter();
 
@@ -145,11 +134,20 @@ const FlashCardResult = ({
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-2xl font-semibold mb-4">Session Complete!</h2>
-      <p className="mb-4">
+      <h2 className="text-2xl font-semibold mb-2">Session Complete!</h2>
+      <p className="mb-2">
         Your Results: {numberOfCorrect}/{Object.keys(result).length}
       </p>
-      <ul className="mb-4">
+      <Button
+        className="mb-4"
+        variant="link"
+        onClick={() => {
+          router.push(`/study-sessions/${sessionId}?tab=flashcards`);
+        }}
+      >
+        Go Back
+      </Button>
+      <ul>
         {Object.entries(result).map(
           ([question, { isCorrect, answer }], idx) => (
             <li key={idx} className="mb-2">
@@ -168,15 +166,6 @@ const FlashCardResult = ({
           ),
         )}
       </ul>
-      <Button onClick={onRestart}>Restart Session</Button>
-      <Button
-        className="mt-2"
-        onClick={() => {
-          router.push(`/study-sessions/${sessionId}?tab=flashcards`);
-        }}
-      >
-        Go Back
-      </Button>
     </div>
   );
 };

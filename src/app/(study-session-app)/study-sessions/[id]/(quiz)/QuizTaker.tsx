@@ -26,7 +26,7 @@ export const QuizTaker = ({
   );
 
   const handleQuizComplete = async (quizId: number) => {
-    await markQuizAsCompleted(parseInt(sessionId), quizId)
+    await markQuizAsCompleted(quizId)
       .then(() => {
         setQuestionIndex(0);
         setChoices({});
