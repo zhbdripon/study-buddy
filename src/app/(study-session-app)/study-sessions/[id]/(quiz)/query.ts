@@ -11,7 +11,11 @@ import {
   DocQuizOption,
   DocQuizQuestion,
 } from "@/drizzle/types";
-import { GenericResult, withAuth, withErrorHandling } from "@/lib/error-utils";
+import {
+  GenericResult,
+  withAuth,
+  withErrorHandling,
+} from "@/lib/shared/error-utils";
 import { and, desc, eq } from "drizzle-orm";
 
 export type RecentQuiz = {

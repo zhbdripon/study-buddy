@@ -5,7 +5,7 @@ import {
 } from "@/app/(study-session-app)/study-sessions/query";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { DocChatMessage, DocSummary } from "@/drizzle/types";
-import { getDataOrThrow } from "@/lib/error-utils";
+import { getDataOrThrow } from "@/lib/shared/error-utils";
 import { DocumentChat } from "./(chat)/DocumentChat";
 import InitializeChatButton from "./(chat)/InitializeChatButton";
 import FlashCardContainer from "./(flashcard)";

@@ -1,4 +1,4 @@
-import { getDataOrThrow } from "@/lib/error-utils";
+import { getDataOrThrow } from "@/lib/shared/error-utils";
 import { RecentFlashCard } from "./RecentFlashCard";
 import { queryRecentFlashCards } from "./query";
 

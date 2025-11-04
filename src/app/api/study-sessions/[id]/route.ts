@@ -1,6 +1,6 @@
 import { db } from "@/drizzle/index";
 import { studySession } from "@/drizzle/schema";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/server/auth";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";

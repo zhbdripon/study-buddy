@@ -24,7 +24,7 @@ import {
   GenericResult,
   withAuth,
   withErrorHandling,
-} from "../../../lib/error-utils";
+} from "../../../lib/shared/error-utils";
 
 export async function insertStudySessionMutation(
   data: StudySessionInsert,

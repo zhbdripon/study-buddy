@@ -1,5 +1,5 @@
 import { DocQuizQuestion, DocumentMeta } from "@/drizzle/types";
-import { shuffleArray } from "@/lib/utils";
+import { shuffleArray } from "@/lib/shared/utils";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";

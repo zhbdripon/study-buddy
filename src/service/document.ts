@@ -7,7 +7,7 @@ import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { z } from "zod";
 
-import { urlToQualifiedId } from "@/lib/utils";
+import { urlToQualifiedId } from "@/lib/shared/utils";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { DocumentLoader } from "./documentLoader";
 
@@ -38,6 +38,12 @@ export async function generateYoutubeSummary(youtubeUrl: string) {
   const docService = new DocumentService(
     DocumentLoader.fromYoutubeTranscript(youtubeUrl),
   );
+  return await docService.generateSummary();
+}
+
+export async function generateSummaryFromRawText(text: string) {
+  const docService = new DocumentService(DocumentLoader.fromRawText(text));
+
   return await docService.generateSummary();
 }
 

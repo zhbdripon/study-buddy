@@ -1,7 +1,7 @@
 "use server";
 import { DocQuiz, DocQuizOption, DocumentMeta } from "@/drizzle/types";
-import { documentTypes } from "@/lib/constants";
-import { getDataOrThrow } from "@/lib/error-utils";
+import { documentTypes } from "@/lib/shared/constants";
+import { getDataOrThrow } from "@/lib/shared/error-utils";
 import { generateMCQ } from "@/service/mcqGenerator";
 import { queryDocuments, queryStudySessionDocumentSummary } from "../../query";
 import {

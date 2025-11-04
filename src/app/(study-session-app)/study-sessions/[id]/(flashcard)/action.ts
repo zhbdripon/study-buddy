@@ -4,8 +4,8 @@ import {
   DocFlashCardQuestionInsert,
   DocumentMeta,
 } from "@/drizzle/types";
-import { documentTypes } from "@/lib/constants";
-import { getDataOrThrow } from "@/lib/error-utils";
+import { documentTypes } from "@/lib/shared/constants";
+import { getDataOrThrow } from "@/lib/shared/error-utils";
 import { FlashCardFromAI, generateFlashCards } from "@/service/flashcards";
 import { queryDocuments, queryStudySessionDocumentSummary } from "../../query";
 import {

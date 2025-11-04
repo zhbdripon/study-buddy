@@ -17,7 +17,7 @@ import { MessageInput } from "@/components/ui/message-input";
 import { MessageList } from "@/components/ui/message-list";
 import { PromptSuggestions } from "@/components/ui/prompt-suggestions";
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 
 interface ChatPropsBase {
   handleSubmit: (

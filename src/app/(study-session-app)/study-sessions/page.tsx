@@ -3,10 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import WebLinkDialogue from "@/components/WebLinkDialogue";
 import YoutubeLinkInput from "@/components/YoutubeLinkInput";
+import DocumentUploadDialog from "@/components/DocumentUploadDialog";
 import { Upload } from "lucide-react";
 
 import { queryStudySessions } from "@/app/(study-session-app)/study-sessions/query";
-import { getDataOrThrow } from "@/lib/error-utils";
+import { getDataOrThrow } from "@/lib/shared/error-utils";
 import { SessionCard } from "./SessionCard";
 
 const StudySessions = async () => {
@@ -31,7 +32,7 @@ const StudySessions = async () => {
           <div className="flex justify-center">
             <WebLinkDialogue />
             <YoutubeLinkInput />
-            <Button className="mx-2">Documents</Button>
+            <DocumentUploadDialog />
             <Button className="mx-2">Handwriting</Button>
           </div>
         </CardContent>

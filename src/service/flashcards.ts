@@ -1,12 +1,12 @@
 import { DocFlashCardQuestion, DocumentMeta } from "@/drizzle/types";
-import { shuffleArray } from "@/lib/utils";
+import { shuffleArray } from "@/lib/shared/utils";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { DocumentLoader } from "./documentLoader";
-import { documentTypes } from "@/lib/constants";
+import { documentTypes } from "@/lib/shared/constants";
 
 export type FlashCardFromAI = Pick<DocFlashCardQuestion, "question" | "answer">;
 

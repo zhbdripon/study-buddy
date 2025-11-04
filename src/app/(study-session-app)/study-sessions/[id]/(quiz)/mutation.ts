@@ -7,7 +7,11 @@ import {
   DocQuizQuestion,
   DocQuizQuestionInsert,
 } from "@/drizzle/types";
-import { GenericResult, withAuth, withErrorHandling } from "@/lib/error-utils";
+import {
+  GenericResult,
+  withAuth,
+  withErrorHandling,
+} from "@/lib/shared/error-utils";
 import { eq } from "drizzle-orm";
 
 export async function insertQuizMutation(

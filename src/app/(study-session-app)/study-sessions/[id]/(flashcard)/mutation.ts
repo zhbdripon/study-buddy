@@ -6,7 +6,11 @@ import {
   DocFlashCardQuestion,
   DocFlashCardQuestionInsert,
 } from "@/drizzle/types";
-import { GenericResult, withAuth, withErrorHandling } from "@/lib/error-utils";
+import {
+  GenericResult,
+  withAuth,
+  withErrorHandling,
+} from "@/lib/shared/error-utils";
 
 export function insertFlashCardMutation(
   flashCardData: DocFlashCardInsert,

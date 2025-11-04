@@ -1,27 +1,27 @@
 import {
-  user,
-  session,
   account,
-  verification,
-  studySession,
-  document,
   docChat,
   docChatDocument,
   docChatMessage,
-  docQuiz,
-  docQuizDocument,
-  docQuizQuestion,
-  docQuizPerformance,
-  docNote,
-  docNoteDocument,
-  documentSummary,
-  quizAnswerEnum,
   docFlashCard,
   docFlashCardQuestion,
+  docNote,
+  docNoteDocument,
+  docQuiz,
+  docQuizDocument,
+  docQuizPerformance,
+  docQuizQuestion,
+  document,
+  documentSummary,
+  quizAnswerEnum,
+  session,
+  studySession,
+  user,
+  verification,
 } from "@/drizzle/schema";
 
+import { DocumentType } from "@/lib/shared/constants";
 import { db } from ".";
-import { DocumentType } from "@/lib/constants";
 
 export type Tx = Parameters<typeof db.transaction>[0] extends (
   tx: infer T,
@@ -122,4 +122,5 @@ export type DocumentMeta =
     }
   | {
       type: Exclude<DocumentType, "webUrl" | "youtube">;
+      data: string;
     };

@@ -11,8 +11,12 @@ import {
   queryStudySessionDocumentSummary,
 } from "@/app/(study-session-app)/study-sessions/query";
 import { DocChat, DocChatMessage, DocChatMessageInsert } from "@/drizzle/types";
-import { documentTypes, DocumentType } from "@/lib/constants";
-import { getDataOrThrow, withAuth, withErrorHandling } from "@/lib/error-utils";
+import { documentTypes, DocumentType } from "@/lib/shared/constants";
+import {
+  getDataOrThrow,
+  withAuth,
+  withErrorHandling,
+} from "@/lib/shared/error-utils";
 import { DocumentChat } from "@/service/documentChat";
 import { indexWebResource, indexYoutubeResource } from "@/service/document";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
@@ -79,17 +83,11 @@ export async function sendChatMessage(
         );
 
         await documentChat.initializeChat(user.id);
-        console.log(
-          "||||||| Initialized chat",
-          user.id,
-          chat.embeddingPath,
-          summaryData.substring(0, 100),
-        );
+
         const messages = (await documentChat.sendMessage(
           chat.threadId,
           message,
         )) as BaseMessage[];
-        console.log("||||||||| Received messages", messages);
 
         const newMessagePayload = messages.map(
           (message: BaseMessage) =>

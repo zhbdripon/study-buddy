@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { signOut, useSession } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/client/auth-client";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 

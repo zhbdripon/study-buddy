@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, Info, Loader2, Mic, Paperclip, Square } from "lucide-react";
 import { omit } from "remeda";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import { useAudioRecording } from "@/hooks/use-audio-recording";
 import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea";
 import { AudioVisualizer } from "@/components/ui/audio-visualizer";

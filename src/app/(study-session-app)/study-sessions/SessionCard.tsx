@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StudySession } from "@/drizzle/types";
-import { getFormattedDateAndTime } from "@/lib/utils";
+import { getFormattedDateAndTime } from "@/lib/shared/utils";
 import { EllipsisVertical } from "lucide-react";
 import { toast } from "sonner";
 

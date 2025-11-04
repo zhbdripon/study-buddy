@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { documentTypes } from "@/lib/constants";
+import { documentTypes } from "@/lib/shared/constants";
 
 const urlSchema = z.string().url();
 

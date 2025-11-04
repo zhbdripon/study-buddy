@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/server/auth";
 import { User } from "better-auth";
 import { DrizzleError } from "drizzle-orm";
 import { headers } from "next/headers";
