@@ -1,0 +1,12 @@
+{
+  "wsPort": 12021,
+  "wsHost": "localhost",
+  "wsProtocol": "ws",
+  "serverPort": 3000,
+  "serverHost": "localhost",
+  "serverProtocol": "http",
+  "proxyPort": 4000,
+  "proxyHost": "localhost",
+  "proxyProtocol": "http",
+  "logging": false
+}

@@ -9,10 +9,13 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "jsx-tool": "jsx-tool",
+    "dev:jsx-tool": "npm run jsx-tool & npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@jsx-tool/jsx-tool": "^0.0.24",
     "@langchain/community": "^0.3.49",
     "@langchain/core": "^0.3.66",
     "@langchain/langgraph": "^0.3.11",

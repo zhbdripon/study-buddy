@@ -1,1 +1,1 @@
-export { default } from "./ChatPanel";
+export { DocumentChat } from "./DocumentChat";

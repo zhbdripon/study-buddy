@@ -169,7 +169,7 @@ export function Chat({
             size="icon"
             variant="ghost"
             className="h-6 w-6"
-            onClick={() => onRateResponse(message.id, "thumbs-up")}
+            onClick={() => onRateResponse(message.id.toString(), "thumbs-up")}
           >
             <ThumbsUp className="h-4 w-4" />
           </Button>
@@ -177,7 +177,7 @@ export function Chat({
             size="icon"
             variant="ghost"
             className="h-6 w-6"
-            onClick={() => onRateResponse(message.id, "thumbs-down")}
+            onClick={() => onRateResponse(message.id.toString(), "thumbs-down")}
           >
             <ThumbsDown className="h-4 w-4" />
           </Button>

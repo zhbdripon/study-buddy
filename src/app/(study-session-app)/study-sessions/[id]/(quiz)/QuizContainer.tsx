@@ -10,7 +10,7 @@ const QuizContainer = async ({
   searchParams,
 }: {
   sessionId: string;
-  searchParams: { page?: string; itemId?: string; tab?: string };
+  searchParams: Promise<{ page?: string; itemId?: string; tab?: string }>;
 }) => {
   const params = await searchParams;
   const quizPage = params?.page;

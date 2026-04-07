@@ -17,8 +17,8 @@ const StudySession = async ({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { tab: string; page?: string; itemId?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab: string; page?: string; itemId?: string }>;
 }) => {
   const { id: studySessionId } = await params;
   const { tab } = await searchParams;
